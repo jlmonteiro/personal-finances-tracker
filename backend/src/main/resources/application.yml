@@ -1,0 +1,16 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: personal-finances-tracker
+  docker:
+    compose:
+      lifecycle-management: start-only
+      file: ../docker-compose.yml
+  datasource:
+    url: jdbc:postgresql://localhost:5432/finances
+    username: finances
+    password: finances
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml

@@ -1,0 +1,49 @@
+# Personal Finances Tracker
+
+A personal finances tracker — month-by-month budgeting with quarter breakdowns.
+
+## Prerequisites
+
+- JDK 21+
+- Docker & Docker Compose
+- Node.js 20+ (or let Gradle download it)
+
+## Quick Start
+
+### Backend
+
+```bash
+./gradlew :backend:bootRun
+```
+
+Spring Docker Compose plugin will auto-start PostgreSQL.
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite dev server runs on http://localhost:5173 with API proxy to http://localhost:8080.
+
+## Build
+
+```bash
+./gradlew build
+```
+
+## Project Structure
+
+```
+├── backend/          # Spring Boot 4.x + Kotlin
+├── frontend/         # React + Mantine + Vite
+├── docker-compose.yml
+├── .specs/           # Requirements, design, tasks (SDD)
+└── docs/wireframes/  # UI wireframes (Markdown-UI DSL)
+```
+
+## License
+
+MIT
