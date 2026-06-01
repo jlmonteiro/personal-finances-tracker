@@ -82,6 +82,14 @@ Personal Finances Tracker — a micro-frontend application for managing personal
 - All exported TypeScript functions, components, hooks, and interfaces must have JSDoc.
 - Internal/private members do not require documentation unless non-obvious.
 
+## UI Reusability
+
+- Never duplicate UI code. If the same pattern appears in 2+ places, extract a shared component.
+- Before creating a new component, search `frontend/src/components/` for existing ones.
+- Shared components live in `frontend/src/components/`. Page-specific components stay in the page file or a co-located file.
+- When a pattern is identified as reusable, extract it immediately — don't wait for a third occurrence.
+- Shared components must be generic (accept props), documented (JSDoc), and independently testable.
+
 ## Specifications
 
 All specs live in `.specs/`:
