@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Liquibase + JOOQ code generation pipeline (LiquibaseDatabase, no Docker needed in build)
 - Initial migration: `app_configuration` table
 - Pre-commit hooks (secrets detection, conventional commits, ESLint)
+- GitHub Actions CI workflows (backend + frontend, path-filtered)
 - SDD specifications (requirements, design, tasks)
 - UI wireframes (Markdown-UI DSL)
 - Project context and coding guidelines
