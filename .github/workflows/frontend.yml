@@ -46,4 +46,3 @@ jobs:
           name: Frontend Tests
           path: frontend/test-results/junit.xml
           reporter: jest-junit
-          working-directory: frontend
