@@ -138,10 +138,10 @@ Internal sidebar using Mantine `NavLink`. Visible on all pages except the Setup 
 
 ## Forms
 
-Using **React Hook Form** with Mantine integration (`@mantine/form` or `react-hook-form` + `@hookform/resolvers`).
+Using **@mantine/form** (`useForm`) for form state and validation — consistent with other projects in the micro-frontend ecosystem.
 
-- Zod for schema validation (type-safe, composable)
-- Form state managed by React Hook Form (not component state)
+- Mantine's built-in validation (or custom validators)
+- Form state managed by `useForm` hook
 - Validation runs on blur and submit
 
 ---
