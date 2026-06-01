@@ -6,9 +6,6 @@ plugins {
     alias(libs.plugins.jooq.codegen)
 }
 
-group = "com.jorgemonteiro.apps.finance"
-version = "0.0.1-SNAPSHOT"
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
