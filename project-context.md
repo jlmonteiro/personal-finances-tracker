@@ -76,6 +76,12 @@ Personal Finances Tracker — a micro-frontend application for managing personal
 - Shared components in `frontend/src/components/`. Extract when pattern appears 2+ times.
 - No global state library. TanStack Query for server state, local state for UI.
 
+## Documentation
+
+- All public Kotlin classes and methods must have KDoc.
+- All exported TypeScript functions, components, hooks, and interfaces must have JSDoc.
+- Internal/private members do not require documentation unless non-obvious.
+
 ## Specifications
 
 All specs live in `.specs/`:
