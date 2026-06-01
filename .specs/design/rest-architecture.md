@@ -4,9 +4,9 @@
 
 API First approach — OpenAPI 3.x specification is the source of truth. All endpoints are versioned under `/api/v1/`.
 
-**Base URL:** `/api/v1`  
-**Auth:** Bearer token (JWT) in `Authorization` header. Dev profile bypasses auth.  
-**Content-Type:** `application/json`  
+**Base URL:** `/api/v1`
+**Auth:** Bearer token (JWT) in `Authorization` header. Dev profile bypasses auth.
+**Content-Type:** `application/json`
 **Error format:** RFC 7807 Problem Details
 
 ---
@@ -95,8 +95,8 @@ API First approach — OpenAPI 3.x specification is the source of truth. All end
 }
 ```
 
-**Frequency values:** `MONTHLY`, `WEEKLY`, `FORTNIGHTLY`, `FOUR_WEEKLY`  
-**Payment date types:** `FIXED`, `RELATIVE`  
+**Frequency values:** `MONTHLY`, `WEEKLY`, `FORTNIGHTLY`, `FOUR_WEEKLY`
+**Payment date types:** `FIXED`, `RELATIVE`
 **Payment date rules:**
 - Fixed: `"25"` (day of month)
 - Relative: `"LAST_THURSDAY"`, `"FIRST_FRIDAY"`, `"EVERY_MONDAY"`

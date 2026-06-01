@@ -4,8 +4,8 @@
 
 ## ADR-1: Multi-Module Gradle Build
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** FR-14, FR-19, FR-20 (independent frontend), all backend FRs
 
 ### Problem
@@ -52,8 +52,8 @@ Multi-module in one repo gives independent build/deploy while keeping version co
 
 ## ADR-2: Spring Boot 4.x with Kotlin
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** All backend FRs
 
 ### Problem
@@ -86,8 +86,8 @@ Spring Boot 4.x provides: Docker Compose plugin (auto-starts DB), OAuth2 Resourc
 
 ## ADR-3: React + Mantine + Vite for Frontend
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** FR-14, FR-15, FR-16, FR-19, FR-20 (dashboard, views)
 
 ### Problem
@@ -120,8 +120,8 @@ Mantine provides: rich component library (tables, forms, modals, date pickers), 
 
 ## ADR-4: OAuth2 with Dev Fake Identity
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** UJ-1 (setup), AS-1 (single user), AS-3 (launcher access)
 
 ### Problem
@@ -155,8 +155,8 @@ A fake identity filter keeps the security filter chain active in dev (same code 
 
 ## ADR-5: PostgreSQL with Docker Compose
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** AS-2 (Docker available)
 
 ### Problem
@@ -191,7 +191,7 @@ PostgreSQL provides full SQL support, JOOQ has excellent PostgreSQL dialect, and
 
 ## ADR-6: Liquibase + JOOQ for Data Layer
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-06-01
 
 ### Problem
@@ -227,8 +227,8 @@ Liquibase + JOOQ gives full control over SQL with type safety. JOOQ code generat
 
 ## ADR-7: Micro-Frontend Composition via micro-lc
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** FR-19, FR-20 (views), AS-3 (launcher access)
 
 ### Problem
@@ -265,8 +265,8 @@ micro-lc supports parcels (single-spa) and iframes. A parcel approach shares the
 
 ## ADR-8: Tabler Icons for Category Visuals
 
-**Status:** Accepted  
-**Date:** 2026-06-01  
+**Status:** Accepted
+**Date:** 2026-06-01
 **Traces:** FR-5 (category management)
 
 ### Problem
@@ -299,7 +299,7 @@ Mantine already ships with `@tabler/icons-react` (5,400+ icons). Zero extra depe
 
 ## ADR-9: GitHub Actions for CI/CD
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-06-01
 
 ### Problem
