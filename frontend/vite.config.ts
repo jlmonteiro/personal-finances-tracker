@@ -12,4 +12,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
   },
+  test: {
+    reporters: ['default', 'junit'],
+    outputFile: {
+      junit: 'test-results/junit.xml',
+    },
+  },
 })

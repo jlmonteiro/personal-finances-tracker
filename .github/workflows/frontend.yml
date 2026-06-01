@@ -38,3 +38,12 @@ jobs:
 
       - name: Test
         run: npm run test -- --run
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Frontend Tests
+          path: frontend/test-results/junit.xml
+          reporter: jest-junit
+          working-directory: frontend
