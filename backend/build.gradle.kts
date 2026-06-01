@@ -3,9 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
+    alias(libs.plugins.jooq.codegen)
 }
 
-group = "com.personal.finances"
+group = "com.jorgemonteiro.apps.finance"
 version = "0.0.1-SNAPSHOT"
 
 java {
@@ -39,6 +40,11 @@ dependencies {
     testImplementation(libs.cucumber.java)
     testImplementation(libs.cucumber.spring)
     testImplementation(libs.cucumber.junit.platform.engine)
+
+    // JOOQ code generation dependencies
+    jooqCodegen(libs.jooq.meta.extensions.liquibase)
+    jooqCodegen(libs.liquibase.core)
+    jooqCodegen(libs.postgresql)
 }
 
 dependencyManagement {
@@ -55,4 +61,50 @@ kotlin {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+// JOOQ code generation configuration
+jooq {
+    configuration {
+        generator {
+            name = "org.jooq.codegen.KotlinGenerator"
+            database {
+                name = "org.jooq.meta.extensions.liquibase.LiquibaseDatabase"
+                properties {
+                    property {
+                        key = "rootPath"
+                        value = "${projectDir}/src/main/resources"
+                    }
+                    property {
+                        key = "scripts"
+                        value = "db/changelog/db.changelog-master.yaml"
+                    }
+                }
+            }
+            generate {
+                isDeprecated = false
+                isRecords = true
+                isPojos = false
+                isFluentSetters = true
+            }
+            target {
+                packageName = "com.jorgemonteiro.apps.finance.data.jooq"
+                directory = "${layout.buildDirectory.get()}/generated/jooq"
+            }
+        }
+    }
+}
+
+// Add generated sources to the compile classpath
+sourceSets {
+    main {
+        kotlin {
+            srcDir(layout.buildDirectory.dir("generated/jooq"))
+        }
+    }
+}
+
+// Ensure JOOQ codegen runs before compilation
+tasks.named("compileKotlin") {
+    dependsOn(tasks.named("jooqCodegen"))
 }

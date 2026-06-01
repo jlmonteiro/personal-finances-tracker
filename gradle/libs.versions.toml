@@ -9,6 +9,7 @@ postgresql = "42.7.5"
 node-gradle = "7.1.0"
 cucumber = "7.22.0"
 testcontainers = "1.20.6"
+jooq-gradle = "3.19.18"
 
 [libraries]
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
@@ -21,6 +22,8 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 liquibase-core = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
+jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
+jooq-meta-extensions-liquibase = { module = "org.jooq:jooq-meta-extensions-liquibase", version.ref = "jooq" }
 
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
@@ -42,3 +45,4 @@ kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotl
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
 node-gradle = { id = "com.github.node-gradle.node", version.ref = "node-gradle" }
+jooq-codegen = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq-gradle" }

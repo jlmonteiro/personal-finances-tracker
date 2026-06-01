@@ -90,6 +90,12 @@ Personal Finances Tracker — a micro-frontend application for managing personal
 - When a pattern is identified as reusable, extract it immediately — don't wait for a third occurrence.
 - Shared components must be generic (accept props), documented (JSDoc), and independently testable.
 
+## Git Workflow
+
+- Never commit without explicit user request.
+- Always use the git skills (commit, push, create-branch, create-pr) — never run git commands directly.
+- The user decides when to commit, what message to use, and when to push.
+
 ## Specifications
 
 All specs live in `.specs/`:
