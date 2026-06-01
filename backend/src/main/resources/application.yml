@@ -7,7 +7,6 @@ spring:
   docker:
     compose:
       lifecycle-management: start-only
-      file: ../docker-compose.yml
   datasource:
     url: jdbc:postgresql://localhost:5432/finances
     username: finances
