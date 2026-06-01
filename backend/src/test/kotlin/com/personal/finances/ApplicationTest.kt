@@ -8,6 +8,9 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
+/**
+ * Verifies that the Spring application context loads successfully.
+ */
 @SpringBootTest
 @Testcontainers
 class ApplicationTest {

@@ -1,6 +1,10 @@
 import { Title, Text, Container } from '@mantine/core'
 
-export function App() {
+/**
+ * Root application component.
+ * Renders the main layout and will host routing once pages are implemented.
+ */
+export const App = () => {
   return (
     <Container size="sm" py="xl">
       <Title order={1}>Personal Finances Tracker</Title>
