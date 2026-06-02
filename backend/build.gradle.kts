@@ -1,6 +1,9 @@
+import org.jetbrains.kotlin.gradle.internal.KaptGenerateStubsTask
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.kapt)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.spring.dependency.management)
     alias(libs.plugins.jooq.codegen)
@@ -18,20 +21,24 @@ repositories {
 
 dependencies {
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.jooq)
     implementation(libs.spring.boot.docker.compose)
-    implementation(libs.liquibase.core)
+    implementation(libs.spring.boot.starter.liquibase)
     implementation(libs.postgresql)
     implementation(libs.jooq)
     implementation(libs.mapstruct)
+    implementation(libs.uuid.creator)
     implementation(libs.kotlin.reflect)
     implementation(libs.jackson.module.kotlin)
 
-    annotationProcessor(libs.mapstruct.processor)
+    kapt(libs.mapstruct.processor)
 
     runtimeOnly(libs.postgresql)
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
+    testImplementation(libs.junit.platform.suite)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.cucumber.java)
@@ -54,6 +61,17 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
+}
+
+kapt {
+    arguments {
+        arg("mapstruct.defaultComponentModel", "spring")
+    }
+    includeCompileClasspath = false
+}
+
+tasks.matching { it.name == "kaptTestKotlin" }.configureEach {
+    enabled = false
 }
 
 tasks.withType<Test> {
@@ -83,6 +101,8 @@ jooq {
                 isRecords = true
                 isPojos = false
                 isFluentSetters = true
+                isKotlinNotNullRecordAttributes = true
+                isKotlinNotNullPojoAttributes = true
             }
             target {
                 packageName = "com.jorgemonteiro.apps.finance.data.jooq"
@@ -101,7 +121,11 @@ sourceSets {
     }
 }
 
-// Ensure JOOQ codegen runs before compilation
+// Ensure JOOQ codegen runs before compilation and kapt
 tasks.named("compileKotlin") {
+    dependsOn(tasks.named("jooqCodegen"))
+}
+
+tasks.withType<KaptGenerateStubsTask>().configureEach {
     dependsOn(tasks.named("jooqCodegen"))
 }
