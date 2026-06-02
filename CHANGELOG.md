@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-02
+
+### Added
+
+- Income Sources CRUD API (GET list, POST, PATCH, DELETE)
+- Income sources database migration
+- Frequency and PaymentDateType enums
+- Money DTO ({value, currency}) per API guidelines
+- Paginated response wrapper
+- ScenarioContext for Cucumber test isolation
+- ValidationException in exception hierarchy
+- 18 Cucumber scenarios for income sources
+
 ## [0.1.0] - 2026-06-02
 
 ### Added
