@@ -1,0 +1,622 @@
+openapi: 3.0.3
+info:
+  title: Personal Finances Tracker API
+  description: REST API for managing personal finances — month-by-month budgeting with quarter breakdowns.
+  version: 0.1.0
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+paths:
+  /api/v1/configuration:
+    get:
+      summary: Get application configuration
+      description: Returns the current application configuration, or 404 if the setup wizard has not been completed yet.
+      operationId: getConfiguration
+      tags: [Configuration]
+      responses:
+        "200":
+          description: Configuration found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationResponse"
+              example:
+                id: "019059a4-b4c7-7000-8000-000000000001"
+                currency: "EUR"
+                monthStartDay: 1
+                createdAt: "2026-06-01T10:00:00Z"
+        "404":
+          description: Configuration not found — setup wizard has not been completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/not-found"
+                title: "Not Found"
+                status: 404
+                detail: "Configuration not found"
+
+    post:
+      summary: Create application configuration
+      description: Creates the initial application configuration during the setup wizard. Returns 409 if configuration already exists.
+      operationId: createConfiguration
+      tags: [Configuration]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConfigurationRequest"
+            example:
+              currency: "EUR"
+              monthStartDay: 1
+      responses:
+        "201":
+          description: Configuration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationResponse"
+              example:
+                id: "019059a4-b4c7-7000-8000-000000000001"
+                currency: "EUR"
+                monthStartDay: 1
+                createdAt: "2026-06-01T10:00:00Z"
+        "409":
+          description: Configuration already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/conflict"
+                title: "Conflict"
+                status: 409
+                detail: "Configuration already exists"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/validation-failed"
+                title: "Unprocessable Entity"
+                status: 422
+                detail: "Validation failed"
+                errors:
+                  - field: "currency"
+                    message: "size must be between 3 and 3"
+
+    patch:
+      summary: Update application configuration
+      description: Partially updates the application configuration. Only provided fields are updated; omitted fields remain unchanged.
+      operationId: updateConfiguration
+      tags: [Configuration]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateConfigurationRequest"
+            example:
+              currency: "GBP"
+      responses:
+        "200":
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigurationResponse"
+              example:
+                id: "019059a4-b4c7-7000-8000-000000000001"
+                currency: "GBP"
+                monthStartDay: 1
+                createdAt: "2026-06-01T10:00:00Z"
+        "404":
+          description: Configuration not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/not-found"
+                title: "Not Found"
+                status: 404
+                detail: "Configuration not found"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/validation-failed"
+                title: "Unprocessable Entity"
+                status: 422
+                detail: "Validation failed"
+                errors:
+                  - field: "monthStartDay"
+                    message: "must be less than or equal to 28"
+
+  /api/v1/income-sources:
+    get:
+      summary: List income sources
+      description: Returns a paginated list of all configured income sources.
+      operationId: listIncomeSources
+      tags: [Income Sources]
+      parameters:
+        - $ref: "#/components/parameters/page"
+        - $ref: "#/components/parameters/size"
+      responses:
+        "200":
+          description: Paginated list of income sources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSourceListResponse"
+              example:
+                data:
+                  - id: "019059a4-b4c7-7000-8000-000000000002"
+                    name: "Salary"
+                    description: "Monthly salary from Company X"
+                    amount:
+                      value: "3500.00"
+                      currency: "EUR"
+                    frequency: "MONTHLY"
+                    paymentDateType: "FIXED"
+                    paymentDateRule: "25"
+                    startDate: "2026-01-01"
+                    endDate: null
+                    isActive: true
+                    createdAt: "2026-06-01T10:00:00Z"
+                pagination:
+                  page: 1
+                  size: 20
+                  totalElements: 1
+                  totalPages: 1
+
+    post:
+      summary: Create income source
+      description: Creates a new income source with payment schedule configuration.
+      operationId: createIncomeSource
+      tags: [Income Sources]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIncomeSourceRequest"
+            example:
+              name: "Salary"
+              description: "Monthly salary from Company X"
+              amount:
+                value: "3500.00"
+                currency: "EUR"
+              frequency: "MONTHLY"
+              paymentDateType: "FIXED"
+              paymentDateRule: "25"
+              startDate: "2026-01-01"
+              endDate: null
+      responses:
+        "201":
+          description: Income source created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSourceResponse"
+              example:
+                id: "019059a4-b4c7-7000-8000-000000000002"
+                name: "Salary"
+                description: "Monthly salary from Company X"
+                amount:
+                  value: "3500.00"
+                  currency: "EUR"
+                frequency: "MONTHLY"
+                paymentDateType: "FIXED"
+                paymentDateRule: "25"
+                startDate: "2026-01-01"
+                endDate: null
+                isActive: true
+                createdAt: "2026-06-01T10:00:00Z"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/validation-failed"
+                title: "Unprocessable Entity"
+                status: 422
+                detail: "Validation failed"
+                errors:
+                  - field: "amount"
+                    message: "must be greater than 0"
+
+  /api/v1/income-sources/{id}:
+    patch:
+      summary: Update income source
+      description: Partially updates an existing income source. Only provided fields are updated.
+      operationId: updateIncomeSource
+      tags: [Income Sources]
+      parameters:
+        - $ref: "#/components/parameters/id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIncomeSourceRequest"
+            example:
+              amount:
+                value: "4000.00"
+                currency: "EUR"
+      responses:
+        "200":
+          description: Income source updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeSourceResponse"
+              example:
+                id: "019059a4-b4c7-7000-8000-000000000002"
+                name: "Salary"
+                description: "Monthly salary from Company X"
+                amount:
+                  value: "4000.00"
+                  currency: "EUR"
+                frequency: "MONTHLY"
+                paymentDateType: "FIXED"
+                paymentDateRule: "25"
+                startDate: "2026-01-01"
+                endDate: null
+                isActive: true
+                createdAt: "2026-06-01T10:00:00Z"
+        "404":
+          description: Income source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/not-found"
+                title: "Not Found"
+                status: 404
+                detail: "Income source not found"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetail"
+
+    delete:
+      summary: Delete income source
+      description: Permanently deletes an income source.
+      operationId: deleteIncomeSource
+      tags: [Income Sources]
+      parameters:
+        - $ref: "#/components/parameters/id"
+      responses:
+        "204":
+          description: Income source deleted successfully
+        "404":
+          description: Income source not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+              example:
+                type: "https://api.personal-finances.local/errors/not-found"
+                title: "Not Found"
+                status: 404
+                detail: "Income source not found"
+
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      description: Unique resource identifier (UUIDv7)
+      schema:
+        type: string
+        format: uuid
+
+    page:
+      name: page
+      in: query
+      required: false
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+
+    size:
+      name: size
+      in: query
+      required: false
+      description: Number of items per page
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+
+  schemas:
+    ConfigurationResponse:
+      type: object
+      description: Application configuration state
+      required: [id, currency, monthStartDay, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+        monthStartDay:
+          type: integer
+          minimum: 1
+          maximum: 28
+          description: Day of month when the financial month starts
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when configuration was created (UTC)
+
+    CreateConfigurationRequest:
+      type: object
+      description: Payload for creating the initial application configuration
+      required: [currency]
+      properties:
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code (e.g., EUR, GBP, USD)
+        monthStartDay:
+          type: integer
+          minimum: 1
+          maximum: 28
+          default: 1
+          description: Day of month when the financial month starts (defaults to 1)
+
+    UpdateConfigurationRequest:
+      type: object
+      description: Payload for partially updating the application configuration
+      properties:
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+        monthStartDay:
+          type: integer
+          minimum: 1
+          maximum: 28
+          description: Day of month when the financial month starts
+
+    IncomeSourceResponse:
+      type: object
+      description: An income source with payment schedule
+      required: [id, name, amount, frequency, paymentDateType, paymentDateRule, startDate, isActive, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        name:
+          type: string
+          description: Name of the income source
+        description:
+          type: string
+          nullable: true
+          description: Optional description or note about the income source
+        amount:
+          $ref: "#/components/schemas/Money"
+        frequency:
+          type: string
+          enum: [MONTHLY, WEEKLY, FORTNIGHTLY, FOUR_WEEKLY]
+          description: Payment frequency
+        paymentDateType:
+          type: string
+          enum: [FIXED, RELATIVE]
+          description: Type of payment date rule
+        paymentDateRule:
+          type: string
+          description: "Payment date rule. Fixed: day of month (e.g., '25'). Relative: rule name (e.g., 'LAST_THURSDAY', 'FIRST_FRIDAY', 'EVERY_MONDAY')"
+        startDate:
+          type: string
+          format: date
+          description: Date when this income source becomes active
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: Date when this income source ends (null = indefinite)
+        isActive:
+          type: boolean
+          description: Whether this income source is currently active
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when income source was created (UTC)
+
+    CreateIncomeSourceRequest:
+      type: object
+      description: Payload for creating a new income source
+      required: [name, amount, frequency, paymentDateType, paymentDateRule, startDate]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Name of the income source
+        description:
+          type: string
+          maxLength: 500
+          description: Optional description or note
+        amount:
+          $ref: "#/components/schemas/Money"
+        frequency:
+          type: string
+          enum: [MONTHLY, WEEKLY, FORTNIGHTLY, FOUR_WEEKLY]
+          description: Payment frequency
+        paymentDateType:
+          type: string
+          enum: [FIXED, RELATIVE]
+          description: Type of payment date rule
+        paymentDateRule:
+          type: string
+          maxLength: 100
+          description: "Payment date rule definition"
+        startDate:
+          type: string
+          format: date
+          description: Date when this income source becomes active
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: Date when this income source ends (null = indefinite)
+
+    UpdateIncomeSourceRequest:
+      type: object
+      description: Payload for partially updating an income source
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Name of the income source
+        description:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Optional description or note
+        amount:
+          $ref: "#/components/schemas/Money"
+        frequency:
+          type: string
+          enum: [MONTHLY, WEEKLY, FORTNIGHTLY, FOUR_WEEKLY]
+          description: Payment frequency
+        paymentDateType:
+          type: string
+          enum: [FIXED, RELATIVE]
+          description: Type of payment date rule
+        paymentDateRule:
+          type: string
+          maxLength: 100
+          description: Payment date rule definition
+        startDate:
+          type: string
+          format: date
+          description: Date when this income source becomes active
+        endDate:
+          type: string
+          format: date
+          nullable: true
+          description: Date when this income source ends
+        isActive:
+          type: boolean
+          description: Whether this income source is currently active
+
+    IncomeSourceListResponse:
+      type: object
+      description: Paginated list of income sources
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/IncomeSourceResponse"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Money:
+      type: object
+      description: Monetary value with currency (ISO 4217)
+      required: [value, currency]
+      properties:
+        value:
+          type: string
+          description: Monetary value as string to avoid floating point precision loss
+          example: "3500.00"
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: ISO 4217 currency code
+          example: "EUR"
+
+    Pagination:
+      type: object
+      description: Pagination metadata
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+        size:
+          type: integer
+          description: Number of items per page
+        totalElements:
+          type: integer
+          description: Total number of items across all pages
+        totalPages:
+          type: integer
+          description: Total number of pages
+
+    ProblemDetail:
+      type: object
+      description: RFC 7807 Problem Detail response
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI identifying the error category
+        title:
+          type: string
+          description: Human-readable error title
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation of the error
+        instance:
+          type: string
+          description: URI identifying the specific occurrence
+
+    ValidationProblemDetail:
+      description: RFC 7807 Problem Detail with field-level validation errors
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetail"
+        - type: object
+          properties:
+            errors:
+              type: array
+              description: List of field-level validation errors
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                    description: Field name that failed validation
+                  message:
+                    type: string
+                    description: Validation error message

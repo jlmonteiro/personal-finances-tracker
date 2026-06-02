@@ -34,3 +34,10 @@ repos:
         language: script
         files: (gradle\.properties|frontend/package\.json)
         pass_filenames: false
+
+      - id: openapi-lint
+        name: openapi lint
+        entry: npx @redocly/cli lint docs/api/openapi.yaml
+        language: system
+        files: (docs/api/.*\.yaml|redocly\.yaml)
+        pass_filenames: false
