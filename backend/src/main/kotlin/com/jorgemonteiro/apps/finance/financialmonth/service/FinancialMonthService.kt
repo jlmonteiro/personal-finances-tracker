@@ -8,6 +8,7 @@ import com.jorgemonteiro.apps.finance.financialmonth.dto.CreateFinancialMonthReq
 import com.jorgemonteiro.apps.finance.financialmonth.dto.FinancialMonthResponse
 import com.jorgemonteiro.apps.finance.financialmonth.dto.QuarterResponse
 import com.jorgemonteiro.apps.finance.financialmonth.repository.FinancialMonthRepository
+import com.jorgemonteiro.apps.finance.incomeentry.service.IncomeEntryService
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -21,6 +22,7 @@ import java.util.UUID
 class FinancialMonthService(
     private val repository: FinancialMonthRepository,
     private val configurationRepository: ConfigurationRepository,
+    private val incomeEntryService: IncomeEntryService,
 ) {
 
     /** Lists all financial months. */
@@ -64,6 +66,7 @@ class FinancialMonthService(
         val record = repository.insert(monthId, startDate, endDate, now)
 
         generateQuarters(monthId, startDate, endDate)
+        incomeEntryService.generateForMonth(monthId)
 
         return toResponse(record)
     }

@@ -39,6 +39,7 @@ export interface UpdateExpenseRequest {
   dueDate?: string
   paymentDate?: string
   clearPayment?: boolean
+  bankAccountId?: string
 }
 
 export const listExpenses = (monthId: string) =>

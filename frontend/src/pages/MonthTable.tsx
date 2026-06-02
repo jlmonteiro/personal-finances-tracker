@@ -32,6 +32,7 @@ import {
   IconArrowRight,
   IconEdit,
   IconReceipt,
+  IconCalendarDue,
 } from '@tabler/icons-react'
 import * as TablerIcons from '@tabler/icons-react'
 import {
@@ -74,6 +75,9 @@ export const MonthTable = () => {
   const [payingExpense, setPayingExpense] = useState<ExpenseResponse | null>(null)
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | null>(null)
   const [budgetModal, setBudgetModal] = useState<{ quarterId: string; categoryId: string; amount: number } | null>(null)
+  const [deletingBudget, setDeletingBudget] = useState<{ quarterId: string; categoryId: string; name: string } | null>(null)
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
+  const [activeAccounts, setActiveAccounts] = useState<Set<string>>(new Set())
 
   const { data: month } = useQuery({ queryKey: ['financial-month', id], queryFn: () => getFinancialMonth(id!), enabled: !!id })
   const { data: quarters = [] } = useQuery({ queryKey: ['quarters', id], queryFn: () => getQuarters(id!), enabled: !!id })
@@ -117,7 +121,7 @@ export const MonthTable = () => {
   const bankAccountOptions = bankAccounts.map((a) => ({ value: a.id, label: a.name }))
 
   const payForm = useForm({ initialValues: { actualValue: '', paymentDate: '' } })
-  const editForm = useForm({ initialValues: { title: '', expectedValue: '', dueDate: '' } })
+  const editForm = useForm({ initialValues: { title: '', expectedValue: '', dueDate: '', bankAccountId: '' } })
 
   const handleAddExpense = async (values: typeof addForm.values) => {
     try {
@@ -140,20 +144,33 @@ export const MonthTable = () => {
     } catch (error) { notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' }) }
   }
 
-  const handleDelete = async (expenseId: string) => {
-    try { await deleteExpense(expenseId); await queryClient.invalidateQueries({ queryKey: ['expenses', id] }) }
-    catch (error) { notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' }) }
+  const handleDelete = async () => {
+    if (!deletingExpenseId) return
+    try {
+      await deleteExpense(deletingExpenseId)
+      await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
+    } catch (error) { notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' }) }
+    finally { setDeletingExpenseId(null) }
+  }
+
+  const handleDeleteBudget = async () => {
+    if (!deletingBudget) return
+    try {
+      await deleteCategoryBudget(deletingBudget.quarterId, deletingBudget.categoryId)
+      await queryClient.invalidateQueries({ queryKey: ['category-budgets', id] })
+    } catch (error) { notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' }) }
+    finally { setDeletingBudget(null) }
   }
 
   const openEdit = (exp: ExpenseResponse) => {
     setEditingExpense(exp)
-    editForm.setValues({ title: exp.title, expectedValue: String(exp.expectedValue), dueDate: exp.dueDate })
+    editForm.setValues({ title: exp.title, expectedValue: String(exp.expectedValue), dueDate: exp.dueDate, bankAccountId: exp.bankAccountId ?? '' })
   }
 
   const handleEdit = async () => {
     if (!editingExpense) return
     try {
-      await updateExpense(editingExpense.id, { title: editForm.values.title, expectedValue: parseFloat(editForm.values.expectedValue), dueDate: editForm.values.dueDate })
+      await updateExpense(editingExpense.id, { title: editForm.values.title, expectedValue: parseFloat(editForm.values.expectedValue), dueDate: editForm.values.dueDate, bankAccountId: editForm.values.bankAccountId })
       await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
       setEditingExpense(null)
       notifications.show({ title: 'Saved', message: 'Expense updated.', color: 'green' })
@@ -196,22 +213,25 @@ export const MonthTable = () => {
       <Grid>
         {/* Left Panel */}
         <Grid.Col span={3}>
-          <MonthSidebar expenses={expenses} />
+          <MonthSidebar monthId={id!} expenses={expenses} />
         </Grid.Col>
 
         {/* Right Content */}
         <Grid.Col span={9}>
+
           <Tabs defaultValue="1">
             <Tabs.List mb="md">
               {quarters.map((q) => {
                 const qExpenses = expenses.filter((e) => e.quarterNumber === q.quarterNumber)
-                const unpaid = qExpenses.filter((e) => e.status !== 'PAID').reduce((s, e) => s + e.expectedValue, 0)
                 const allPaid = qExpenses.length > 0 && qExpenses.every((e) => e.status === 'PAID')
+                const endDay = new Date(q.endDate).getDate()
+                const endMonth = new Date(q.endDate).toLocaleDateString('en', { month: 'short' })
                 return (
                   <Tabs.Tab key={q.quarterNumber} value={String(q.quarterNumber)}>
                     <Group gap={4}>
                       {allPaid && <IconCheck size={14} color="green" />}
-                      <span>Q{q.quarterNumber} · {unpaid > 0 ? fmt(unpaid) : '✓'}</span>
+                      <IconCalendarDue size={14} />
+                      <span>Q{q.quarterNumber} · {endDay} {endMonth}</span>
                     </Group>
                   </Tabs.Tab>
                 )
@@ -219,7 +239,9 @@ export const MonthTable = () => {
             </Tabs.List>
 
             {quarters.map((q) => {
-              const quarterExpenses = expenses.filter((e) => e.quarterNumber === q.quarterNumber)
+              const quarterExpenses = expenses
+                .filter((e) => e.quarterNumber === q.quarterNumber)
+                .filter((e) => activeAccounts.size === 0 || (e.bankAccountId && activeAccounts.has(e.bankAccountId)))
               const qBudget = quarterExpenses.reduce((s, e) => s + e.expectedValue, 0)
               const qActual = quarterExpenses.reduce((s, e) => s + (e.actualValue ?? 0), 0)
 
@@ -256,6 +278,52 @@ export const MonthTable = () => {
 
                   <Text size="sm" c="dimmed" mb="sm">{q.startDate} → {q.endDate}</Text>
 
+                  {/* Per-account totals */}
+                  {bankAccounts.length > 0 && (
+                    <Group gap="xs" mb="md">
+                      {bankAccounts.map((a) => {
+                        const accountRequired = quarterExpenses
+                          .filter((e) => e.bankAccountId === a.id && e.status !== 'PAID')
+                          .reduce((s, e) => s + e.expectedValue, 0)
+                        if (accountRequired === 0) return null
+                        return (
+                          <Paper key={a.id} p="xs" withBorder radius="md" shadow="xs">
+                            <Text size="xs" c="dimmed">Funds required on {a.name}</Text>
+                            <Text size="sm" fw={600}>{fmt(accountRequired)}</Text>
+                          </Paper>
+                        )
+                      })}
+                    </Group>
+                  )}
+
+                  {bankAccounts.length > 0 && (
+                    <Group gap="xs" mb="sm">
+                      <Text size="xs" c="dimmed">Filter by account:</Text>
+                      {bankAccounts.map((a) => (
+                        <Badge
+                          key={a.id}
+                          variant={activeAccounts.has(a.id) ? 'filled' : 'light'}
+                          color="violet"
+                          size="xs"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            const next = new Set(activeAccounts)
+                            if (next.has(a.id)) next.delete(a.id)
+                            else next.add(a.id)
+                            setActiveAccounts(next)
+                          }}
+                        >
+                          {a.name}
+                        </Badge>
+                      ))}
+                      {activeAccounts.size > 0 && (
+                        <Badge variant="outline" size="xs" style={{ cursor: 'pointer' }} onClick={() => setActiveAccounts(new Set())}>
+                          Clear
+                        </Badge>
+                      )}
+                    </Group>
+                  )}
+
                   <Group mb="sm">
                     <Select
                       placeholder="Add category budget..."
@@ -281,34 +349,33 @@ export const MonthTable = () => {
                         const catRemaining = planned - catSpent
                         return (
                           <Accordion.Item key={catId} value={catId}>
-                            <Accordion.Control>
-                              <Group gap="sm">
-                                <ThemeIcon variant="light" size="sm" radius="xl">
-                                  {resolveIcon(group.icon, 14) ?? <IconReceipt size={14} />}
-                                </ThemeIcon>
-                                <Text fw={500}>{group.name}</Text>
-                                <Badge variant="light" color="blue" size="sm" style={{ cursor: 'pointer' }} onClick={() => { setBudgetModal({ quarterId: q.id, categoryId: catId, amount: planned }); budgetForm.setValues({ amount: String(planned) }) }}>Planned: {fmt(planned)} ✎</Badge>
-                                <Badge variant="light" color="green" size="sm">Spent: {fmt(catSpent)}</Badge>
-                                <Badge variant="light" color={catRemaining >= 0 ? 'teal' : 'red'} size="sm">
-                                  Remaining: {fmt(catRemaining)}
-                                </Badge>
-                                {group.expenses.length === 0 && (
-                                  <ActionIcon
-                                    size="xs"
-                                    variant="subtle"
-                                    color="red"
-                                    onClick={async (e) => {
-                                      e.stopPropagation()
-                                      await deleteCategoryBudget(q.id, catId)
-                                      await queryClient.invalidateQueries({ queryKey: ['category-budgets', id] })
-                                    }}
-                                    aria-label="Remove budget"
-                                  >
-                                    <IconTrash size={12} />
-                                  </ActionIcon>
-                                )}
-                              </Group>
-                            </Accordion.Control>
+                            <Group gap={0} wrap="nowrap">
+                              <Accordion.Control style={{ flex: 1 }}>
+                                <Group gap="sm">
+                                  <ThemeIcon variant="light" size="sm" radius="xl">
+                                    {resolveIcon(group.icon, 14) ?? <IconReceipt size={14} />}
+                                  </ThemeIcon>
+                                  <Text fw={500}>{group.name}</Text>
+                                  <Badge variant="light" color="blue" size="sm" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setBudgetModal({ quarterId: q.id, categoryId: catId, amount: planned }); budgetForm.setValues({ amount: String(planned) }) }}>Planned: {fmt(planned)} ✎</Badge>
+                                  <Badge variant="light" color="green" size="sm">Spent: {fmt(catSpent)}</Badge>
+                                  <Badge variant="light" color={catRemaining >= 0 ? 'teal' : 'red'} size="sm">
+                                    Remaining: {fmt(catRemaining)}
+                                  </Badge>
+                                </Group>
+                              </Accordion.Control>
+                              {group.expenses.length === 0 && (
+                                <ActionIcon
+                                  size="sm"
+                                  variant="subtle"
+                                  color="red"
+                                  mr="sm"
+                                  onClick={() => setDeletingBudget({ quarterId: q.id, categoryId: catId, name: group.name })}
+                                  aria-label="Remove budget"
+                                >
+                                  <IconTrash size={14} />
+                                </ActionIcon>
+                              )}
+                            </Group>
                             <Accordion.Panel>
                               <Table>
                                 <Table.Thead>
@@ -318,6 +385,7 @@ export const MonthTable = () => {
                                     <Table.Th ta="right">Expected</Table.Th>
                                     <Table.Th ta="right">Actual</Table.Th>
                                     <Table.Th>Due</Table.Th>
+                                    <Table.Th>Account</Table.Th>
                                     <Table.Th>Status</Table.Th>
                                     <Table.Th>Actions</Table.Th>
                                   </Table.Tr>
@@ -330,6 +398,7 @@ export const MonthTable = () => {
                                       <Table.Td ta="right">{fmt(exp.expectedValue)}</Table.Td>
                                       <Table.Td ta="right">{exp.actualValue ? fmt(exp.actualValue) : '—'}</Table.Td>
                                       <Table.Td>{exp.dueDate}</Table.Td>
+                                      <Table.Td>{bankAccounts.find((a) => a.id === exp.bankAccountId)?.name ?? '—'}</Table.Td>
                                       <Table.Td><Badge color={STATUS_COLORS[exp.status]} size="sm">{exp.status}</Badge></Table.Td>
                                       <Table.Td>
                                         <Group gap="xs">
@@ -339,7 +408,7 @@ export const MonthTable = () => {
                                           ) : (
                                             <ActionIcon variant="subtle" color="orange" onClick={async () => { await updateExpense(exp.id, { clearPayment: true }); await queryClient.invalidateQueries({ queryKey: ['expenses', id] }) }} aria-label="Undo payment"><IconArrowLeft size={16} /></ActionIcon>
                                           )}
-                                          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(exp.id)} aria-label="Delete"><IconTrash size={16} /></ActionIcon>
+                                          <ActionIcon variant="subtle" color="red" onClick={() => setDeletingExpenseId(exp.id)} aria-label="Delete"><IconTrash size={16} /></ActionIcon>
                                         </Group>
                                       </Table.Td>
                                     </Table.Tr>
@@ -393,6 +462,7 @@ export const MonthTable = () => {
           <TextInput label="Title" mb="sm" {...editForm.getInputProps('title')} />
           <TextInput label="Expected value" mb="sm" {...editForm.getInputProps('expectedValue')} />
           <TextInput label="Due date" type="date" mb="sm" {...editForm.getInputProps('dueDate')} />
+          <Select label="Bank Account" data={bankAccountOptions} mb="sm" {...editForm.getInputProps('bankAccountId')} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setEditingExpense(null)}>Cancel</Button>
             <Button type="submit">Save</Button>
@@ -408,6 +478,22 @@ export const MonthTable = () => {
             <Button type="submit">Save</Button>
           </Group>
         </form>
+      </Modal>
+
+      <Modal opened={!!deletingExpenseId} onClose={() => setDeletingExpenseId(null)} title="Delete Expense">
+        <Text>Are you sure you want to delete this expense?</Text>
+        <Group justify="flex-end" mt="md">
+          <Button variant="default" onClick={() => setDeletingExpenseId(null)}>Cancel</Button>
+          <Button color="red" onClick={handleDelete}>Delete</Button>
+        </Group>
+      </Modal>
+
+      <Modal opened={!!deletingBudget} onClose={() => setDeletingBudget(null)} title="Remove Budget">
+        <Text>Remove the budget for "{deletingBudget?.name}"?</Text>
+        <Group justify="flex-end" mt="md">
+          <Button variant="default" onClick={() => setDeletingBudget(null)}>Cancel</Button>
+          <Button color="red" onClick={handleDeleteBudget}>Remove</Button>
+        </Group>
       </Modal>
     </Container>
   )

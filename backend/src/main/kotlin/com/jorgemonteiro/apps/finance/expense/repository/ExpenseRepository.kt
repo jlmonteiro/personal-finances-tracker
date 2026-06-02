@@ -51,7 +51,7 @@ class ExpenseRepository(private val dsl: DSLContext) {
     fun update(
         id: UUID, title: String, description: String?, expectedValue: BigDecimal,
         actualValue: BigDecimal?, dueDate: LocalDate, paymentDate: LocalDate?,
-        isOverride: Boolean, now: OffsetDateTime,
+        isOverride: Boolean, bankAccountId: UUID?, now: OffsetDateTime,
     ): ExpensesRecord {
         val query = dsl.update(EXPENSES)
             .set(EXPENSES.TITLE, title)
@@ -59,6 +59,7 @@ class ExpenseRepository(private val dsl: DSLContext) {
             .set(EXPENSES.EXPECTED_VALUE, expectedValue)
             .set(EXPENSES.DUE_DATE, dueDate)
             .set(EXPENSES.IS_OVERRIDE, isOverride)
+            .set(EXPENSES.BANK_ACCOUNT_ID, bankAccountId)
             .set(EXPENSES.UPDATED_AT, now)
 
         if (actualValue != null) {

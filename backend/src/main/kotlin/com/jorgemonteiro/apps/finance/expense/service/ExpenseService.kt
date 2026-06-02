@@ -78,12 +78,14 @@ class ExpenseService(
         val dueDate = request.dueDate ?: existing.dueDate!!
         val paymentDate = if (request.clearPayment == true) null else request.paymentDate ?: existing.paymentDate
         val isOverride = request.expectedValue != null || existing.isOverride!!
+        val bankAccountId = request.bankAccountId ?: existing.bankAccountId
 
         val record = repository.update(
             id = id, title = title, description = description,
             expectedValue = expectedValue, actualValue = actualValue,
             dueDate = dueDate, paymentDate = paymentDate,
-            isOverride = isOverride, now = OffsetDateTime.now(),
+            isOverride = isOverride, bankAccountId = bankAccountId,
+            now = OffsetDateTime.now(),
         )
         return toResponse(record)
     }

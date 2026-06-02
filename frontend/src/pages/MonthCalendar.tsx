@@ -44,6 +44,7 @@ export const MonthCalendar = () => {
   const { data: config } = useConfiguration()
   const currency = config?.currency ?? 'EUR'
   const [showAddExpense, setShowAddExpense] = useState(false)
+  const [activeAccounts, setActiveAccounts] = useState<Set<string>>(new Set())
 
   const formatValue = (value: number) =>
     new Intl.NumberFormat('en', { style: 'currency', currency }).format(value)
@@ -117,13 +118,15 @@ export const MonthCalendar = () => {
 
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | null>(null)
   const [deletingExpense, setDeletingExpense] = useState<ExpenseResponse | null>(null)
+  const [payingExpense, setPayingExpense] = useState<ExpenseResponse | null>(null)
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null)
-  const editForm = useForm({ initialValues: { title: '', expectedValue: '', dueDate: '' } })
+  const editForm = useForm({ initialValues: { title: '', expectedValue: '', dueDate: '', bankAccountId: '' } })
+  const payForm = useForm({ initialValues: { actualValue: '', paymentDate: '' } })
 
   const openEdit = (exp: ExpenseResponse) => {
     setOpenPopoverId(null)
     setEditingExpense(exp)
-    editForm.setValues({ title: exp.title, expectedValue: String(exp.expectedValue), dueDate: exp.dueDate })
+    editForm.setValues({ title: exp.title, expectedValue: String(exp.expectedValue), dueDate: exp.dueDate, bankAccountId: exp.bankAccountId ?? '' })
   }
 
   const handleEdit = async () => {
@@ -133,10 +136,27 @@ export const MonthCalendar = () => {
         title: editForm.values.title,
         expectedValue: parseFloat(editForm.values.expectedValue),
         dueDate: editForm.values.dueDate,
+        bankAccountId: editForm.values.bankAccountId,
       })
       await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
       setEditingExpense(null)
       notifications.show({ title: 'Saved', message: 'Expense updated.', color: 'green' })
+    } catch (error) {
+      notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' })
+    }
+  }
+
+  const handlePay = async () => {
+    if (!payingExpense) return
+    try {
+      await updateExpense(payingExpense.id, {
+        actualValue: parseFloat(payForm.values.actualValue),
+        paymentDate: payForm.values.paymentDate,
+      })
+      await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
+      setPayingExpense(null)
+      payForm.reset()
+      notifications.show({ title: 'Paid', message: 'Payment recorded.', color: 'green' })
     } catch (error) {
       notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' })
     }
@@ -179,7 +199,7 @@ export const MonthCalendar = () => {
       days.push({
         date: dateStr,
         quarterNumber: quarter?.quarterNumber ?? 1,
-        expenses: expenses.filter((e) => e.dueDate === dateStr),
+        expenses: expenses.filter((e) => e.dueDate === dateStr && (activeAccounts.size === 0 || (e.bankAccountId && activeAccounts.has(e.bankAccountId)))),
       })
     }
   }
@@ -220,9 +240,10 @@ export const MonthCalendar = () => {
 
       <Grid>
         <Grid.Col span={3}>
-          <MonthSidebar expenses={expenses} />
+          <MonthSidebar monthId={id!} expenses={expenses} />
         </Grid.Col>
         <Grid.Col span={9}>
+
       {/* Overall stats */}
       {expenses.length > 0 && (() => {
         const totalBudget = expenses.reduce((s, e) => s + e.expectedValue, 0)
@@ -244,6 +265,34 @@ export const MonthCalendar = () => {
           </SimpleGrid>
         )
       })()}
+
+      {bankAccounts.length > 0 && (
+        <Group gap="xs" mb="md">
+          <Text size="xs" c="dimmed">Filter by account:</Text>
+          {bankAccounts.map((a) => (
+            <Badge
+              key={a.id}
+              variant={activeAccounts.has(a.id) ? 'filled' : 'light'}
+              color="violet"
+              size="sm"
+              style={{ cursor: 'pointer' }}
+              onClick={() => {
+                const next = new Set(activeAccounts)
+                if (next.has(a.id)) next.delete(a.id)
+                else next.add(a.id)
+                setActiveAccounts(next)
+              }}
+            >
+              {a.name}
+            </Badge>
+          ))}
+          {activeAccounts.size > 0 && (
+            <Badge variant="outline" size="sm" style={{ cursor: 'pointer' }} onClick={() => setActiveAccounts(new Set())}>
+              Clear
+            </Badge>
+          )}
+        </Group>
+      )}
 
       <SimpleGrid cols={7} spacing="xs">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
@@ -275,7 +324,7 @@ export const MonthCalendar = () => {
             </Group>
             <Stack gap={2}>
               {day.expenses.map((exp) => (
-                <Popover key={exp.id} width={250} position="bottom" shadow="md" opened={openPopoverId === exp.id} onChange={(opened) => setOpenPopoverId(opened ? exp.id : null)}>
+                <Popover key={exp.id} width={360} position="bottom" shadow="md" opened={openPopoverId === exp.id} onChange={(opened) => setOpenPopoverId(opened ? exp.id : null)}>
                   <Popover.Target>
                     <Paper p={4} withBorder radius="sm" bg="white" shadow="xs" style={{ cursor: 'pointer' }} onClick={() => setOpenPopoverId(openPopoverId === exp.id ? null : exp.id)}>
                       <Group gap={4} wrap="nowrap">
@@ -290,24 +339,58 @@ export const MonthCalendar = () => {
                     </Paper>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <Text size="sm" fw={600} mb={4}>{exp.title}</Text>
-                    <Text size="xs" c="dimmed">Payee: {exp.payee.name}</Text>
-                    <Text size="xs" c="dimmed">Category: {exp.category.name}</Text>
-                    <Text size="xs" c="dimmed">Expected: {formatValue(exp.expectedValue)}</Text>
-                    {exp.actualValue && <Text size="xs" c="dimmed">Actual: {formatValue(exp.actualValue)}</Text>}
-                    <Text size="xs" c="dimmed">Due: {exp.dueDate}</Text>
-                    {exp.paymentDate && <Text size="xs" c="dimmed">Paid: {exp.paymentDate}</Text>}
-                    <Text size="xs" c="dimmed">Status: {exp.status}</Text>
-                    {exp.description && <Text size="xs" c="dimmed" mt={4}>{exp.description}</Text>}
-                    <Divider my="sm" />
-                    <Group gap="xs">
-                      <Button size="xs" variant="light" leftSection={<IconEdit size={14} />} onClick={() => openEdit(exp)}>
-                        Edit
-                      </Button>
-                      <Button size="xs" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={() => confirmDelete(exp)}>
-                        Delete
-                      </Button>
-                    </Group>
+                    <Stack gap={8}>
+                      <Group justify="space-between">
+                        <Text size="sm" fw={700}>{exp.title}</Text>
+                        <Badge size="xs" color={exp.status === 'PAID' ? 'green' : exp.status === 'OVERDUE' ? 'red' : 'yellow'}>
+                          {exp.status}
+                        </Badge>
+                      </Group>
+
+                      <SimpleGrid cols={2} spacing={4}>
+                        <Text size="xs" c="dimmed">Payee</Text>
+                        <Text size="xs" fw={500}>{exp.payee.name}</Text>
+                        <Text size="xs" c="dimmed">Category</Text>
+                        <Text size="xs" fw={500}>{exp.category.name}</Text>
+                        <Text size="xs" c="dimmed">Expected</Text>
+                        <Text size="xs" fw={500}>{formatValue(exp.expectedValue)}</Text>
+                        {exp.actualValue && <><Text size="xs" c="dimmed">Actual</Text><Text size="xs" fw={500}>{formatValue(exp.actualValue)}</Text></>}
+                        <Text size="xs" c="dimmed">Due</Text>
+                        <Text size="xs" fw={500}>{exp.dueDate}</Text>
+                        {exp.paymentDate && <><Text size="xs" c="dimmed">Paid on</Text><Text size="xs" fw={500}>{exp.paymentDate}</Text></>}
+                        <Text size="xs" c="dimmed">Account</Text>
+                        <Text size="xs" fw={500}>{bankAccounts.find((a) => a.id === exp.bankAccountId)?.name ?? '—'}</Text>
+                      </SimpleGrid>
+
+                      {exp.description && <Text size="xs" c="dimmed" fs="italic">{exp.description}</Text>}
+
+                      <Divider />
+                      <Group gap="xs" justify="flex-end">
+                        {exp.status !== 'PAID' ? (
+                          <Button size="xs" variant="light" color="green" leftSection={<IconCircleCheck size={14} />} onClick={() => {
+                            setOpenPopoverId(null)
+                            setPayingExpense(exp)
+                            payForm.setValues({ actualValue: String(exp.expectedValue), paymentDate: new Date().toISOString().split('T')[0] })
+                          }}>
+                            Mark Paid
+                          </Button>
+                        ) : (
+                          <Button size="xs" variant="light" color="orange" onClick={async () => {
+                            setOpenPopoverId(null)
+                            await updateExpense(exp.id, { clearPayment: true })
+                            await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
+                          }}>
+                            Unpay
+                          </Button>
+                        )}
+                        <Button size="xs" variant="light" leftSection={<IconEdit size={14} />} onClick={() => openEdit(exp)}>
+                          Edit
+                        </Button>
+                        <Button size="xs" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={() => confirmDelete(exp)}>
+                          Delete
+                        </Button>
+                      </Group>
+                    </Stack>
                   </Popover.Dropdown>
                 </Popover>
               ))}
@@ -338,6 +421,7 @@ export const MonthCalendar = () => {
           <TextInput label="Title" mb="sm" {...editForm.getInputProps('title')} />
           <TextInput label="Expected value" mb="sm" {...editForm.getInputProps('expectedValue')} />
           <TextInput label="Due date" type="date" mb="sm" {...editForm.getInputProps('dueDate')} />
+          <Select label="Bank Account" data={bankAccountOptions} mb="sm" {...editForm.getInputProps('bankAccountId')} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setEditingExpense(null)}>Cancel</Button>
             <Button type="submit">Save</Button>
@@ -351,6 +435,17 @@ export const MonthCalendar = () => {
           <Button variant="default" onClick={() => setDeletingExpense(null)}>Cancel</Button>
           <Button color="red" onClick={handleDelete}>Delete</Button>
         </Group>
+      </Modal>
+
+      <Modal opened={!!payingExpense} onClose={() => setPayingExpense(null)} title="Record Payment">
+        <form onSubmit={payForm.onSubmit(handlePay)}>
+          <TextInput label="Actual amount" mb="sm" {...payForm.getInputProps('actualValue')} />
+          <TextInput label="Payment date" type="date" mb="sm" {...payForm.getInputProps('paymentDate')} />
+          <Group justify="flex-end" mt="md">
+            <Button variant="default" onClick={() => setPayingExpense(null)}>Cancel</Button>
+            <Button color="green" type="submit">Confirm Payment</Button>
+          </Group>
+        </form>
       </Modal>
     </Container>
   )

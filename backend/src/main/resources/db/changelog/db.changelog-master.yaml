@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/006-recurring-expenses.yaml
   - include:
       file: db/changelog/007-budgets-bank-accounts.yaml
+  - include:
+      file: db/changelog/008-income-entries.yaml

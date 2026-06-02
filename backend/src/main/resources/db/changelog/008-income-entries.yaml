@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-income-entries
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: income_entries
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: financial_month_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: income_source_id
+                  type: uuid
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: decimal(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_adhoc
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: income_entries
+            baseColumnNames: financial_month_id
+            referencedTableName: financial_months
+            referencedColumnNames: id
+            constraintName: fk_income_entries_financial_month
+        - addForeignKeyConstraint:
+            baseTableName: income_entries
+            baseColumnNames: income_source_id
+            referencedTableName: income_sources
+            referencedColumnNames: id
+            constraintName: fk_income_entries_income_source
+        - sql:
+            sql: >
+              ALTER TABLE income_entries
+              ADD CONSTRAINT chk_income_entries_positive_amount
+              CHECK (amount > 0)
+        - createIndex:
+            indexName: idx_income_entries_month_id
+            tableName: income_entries
+            columns:
+              - column:
+                  name: financial_month_id

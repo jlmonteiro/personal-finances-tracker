@@ -59,4 +59,5 @@ data class UpdateExpenseRequest(
     val dueDate: LocalDate? = null,
     val paymentDate: LocalDate? = null,
     val clearPayment: Boolean? = null,
+    val bankAccountId: UUID? = null,
 )
