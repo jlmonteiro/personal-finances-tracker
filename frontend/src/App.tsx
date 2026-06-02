@@ -4,13 +4,14 @@
  */
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AppShell, NavLink, LoadingOverlay } from '@mantine/core'
-import { IconDashboard, IconSettings, IconCategory, IconUsers, IconCalendar } from '@tabler/icons-react'
+import { IconDashboard, IconSettings, IconCategory, IconUsers, IconCalendar, IconBuildingBank } from '@tabler/icons-react'
 import { useConfiguration } from './hooks/useConfiguration'
 import { Setup } from './pages/Setup'
 import { Dashboard } from './pages/Dashboard'
 import { Settings } from './pages/Settings'
 import { Categories } from './pages/Categories'
 import { Payees } from './pages/Payees'
+import { BankAccounts } from './pages/BankAccounts'
 import { Months } from './pages/Months'
 import { MonthTable } from './pages/MonthTable'
 import { MonthCalendar } from './pages/MonthCalendar'
@@ -62,6 +63,12 @@ export const App = () => {
           onClick={() => navigate('/payees')}
         />
         <NavLink
+          label="Bank Accounts"
+          leftSection={<IconBuildingBank size={20} />}
+          active={location.pathname === '/bank-accounts'}
+          onClick={() => navigate('/bank-accounts')}
+        />
+        <NavLink
           label="Settings"
           leftSection={<IconSettings size={20} />}
           active={location.pathname === '/settings'}
@@ -76,6 +83,7 @@ export const App = () => {
           <Route path="/month/:id/calendar" element={<MonthCalendar />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/payees" element={<Payees />} />
+          <Route path="/bank-accounts" element={<BankAccounts />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
