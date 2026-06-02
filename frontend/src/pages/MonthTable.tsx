@@ -49,7 +49,7 @@ import {
 import { listPayees } from '../api/payees'
 import { listCategories } from '../api/categories'
 import { listBankAccounts } from '../api/bank-accounts'
-import { listCategoryBudgets, CategoryBudgetResponse } from '../api/category-budgets'
+import { listCategoryBudgets, upsertCategoryBudget, deleteCategoryBudget, CategoryBudgetResponse } from '../api/category-budgets'
 import { getErrorMessage } from '../api/client'
 import { useConfiguration } from '../hooks/useConfiguration'
 import { MonthSidebar } from '../components/MonthSidebar'
@@ -73,6 +73,7 @@ export const MonthTable = () => {
   const [showAddExpense, setShowAddExpense] = useState(false)
   const [payingExpense, setPayingExpense] = useState<ExpenseResponse | null>(null)
   const [editingExpense, setEditingExpense] = useState<ExpenseResponse | null>(null)
+  const [budgetModal, setBudgetModal] = useState<{ quarterId: string; categoryId: string; amount: number } | null>(null)
 
   const { data: month } = useQuery({ queryKey: ['financial-month', id], queryFn: () => getFinancialMonth(id!), enabled: !!id })
   const { data: quarters = [] } = useQuery({ queryKey: ['quarters', id], queryFn: () => getQuarters(id!), enabled: !!id })
@@ -159,6 +160,18 @@ export const MonthTable = () => {
     } catch (error) { notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' }) }
   }
 
+  const budgetForm = useForm({ initialValues: { amount: '' } })
+
+  const handleSaveBudget = async () => {
+    if (!budgetModal) return
+    try {
+      await upsertCategoryBudget(budgetModal.quarterId, budgetModal.categoryId, parseFloat(budgetForm.values.amount))
+      await queryClient.invalidateQueries({ queryKey: ['category-budgets', id] })
+      setBudgetModal(null)
+      notifications.show({ title: 'Saved', message: 'Budget updated.', color: 'green' })
+    } catch (error) { notifications.show({ title: 'Error', message: getErrorMessage(error), color: 'red' }) }
+  }
+
   // Navigation
   const currentIdx = months.findIndex((m) => m.id === id)
   const prevMonth = currentIdx < months.length - 1 ? months[currentIdx + 1] : null
@@ -210,8 +223,14 @@ export const MonthTable = () => {
               const qBudget = quarterExpenses.reduce((s, e) => s + e.expectedValue, 0)
               const qActual = quarterExpenses.reduce((s, e) => s + (e.actualValue ?? 0), 0)
 
-              // Group by category
+              // Group by category (include budgeted categories with no expenses)
               const grouped = new Map<string, { name: string; icon: string; expenses: ExpenseResponse[] }>()
+              const quarterBudgets = allBudgets.filter((b) => b.quarterId === q.id)
+              for (const b of quarterBudgets) {
+                if (!grouped.has(b.categoryId)) {
+                  grouped.set(b.categoryId, { name: b.categoryName, icon: b.categoryIcon, expenses: [] })
+                }
+              }
               for (const exp of quarterExpenses) {
                 if (!grouped.has(exp.category.id)) grouped.set(exp.category.id, { name: exp.category.name, icon: exp.category.icon, expenses: [] })
                 grouped.get(exp.category.id)!.expenses.push(exp)
@@ -237,7 +256,23 @@ export const MonthTable = () => {
 
                   <Text size="sm" c="dimmed" mb="sm">{q.startDate} → {q.endDate}</Text>
 
-                  {quarterExpenses.length > 0 ? (
+                  <Group mb="sm">
+                    <Select
+                      placeholder="Add category budget..."
+                      data={categories.filter((c) => !allBudgets.some((b) => b.categoryId === c.id && b.quarterId === q.id)).map((c) => ({ value: c.id, label: c.name }))}
+                      size="xs"
+                      style={{ flex: 1 }}
+                      onChange={(catId) => {
+                        if (catId) {
+                          setBudgetModal({ quarterId: q.id, categoryId: catId, amount: 0 })
+                          budgetForm.setValues({ amount: '0' })
+                        }
+                      }}
+                      value={null}
+                    />
+                  </Group>
+
+                  {grouped.size > 0 ? (
                     <Accordion multiple defaultValue={[...grouped.keys()]}>
                       {[...grouped.entries()].map(([catId, group]) => {
                         const catSpent = group.expenses.filter((e) => e.status === 'PAID').reduce((s, e) => s + (e.actualValue ?? 0), 0)
@@ -252,11 +287,26 @@ export const MonthTable = () => {
                                   {resolveIcon(group.icon, 14) ?? <IconReceipt size={14} />}
                                 </ThemeIcon>
                                 <Text fw={500}>{group.name}</Text>
-                                <Badge variant="light" color="blue" size="sm">Planned: {fmt(planned)}</Badge>
+                                <Badge variant="light" color="blue" size="sm" style={{ cursor: 'pointer' }} onClick={() => { setBudgetModal({ quarterId: q.id, categoryId: catId, amount: planned }); budgetForm.setValues({ amount: String(planned) }) }}>Planned: {fmt(planned)} ✎</Badge>
                                 <Badge variant="light" color="green" size="sm">Spent: {fmt(catSpent)}</Badge>
                                 <Badge variant="light" color={catRemaining >= 0 ? 'teal' : 'red'} size="sm">
                                   Remaining: {fmt(catRemaining)}
                                 </Badge>
+                                {group.expenses.length === 0 && (
+                                  <ActionIcon
+                                    size="xs"
+                                    variant="subtle"
+                                    color="red"
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      await deleteCategoryBudget(q.id, catId)
+                                      await queryClient.invalidateQueries({ queryKey: ['category-budgets', id] })
+                                    }}
+                                    aria-label="Remove budget"
+                                  >
+                                    <IconTrash size={12} />
+                                  </ActionIcon>
+                                )}
                               </Group>
                             </Accordion.Control>
                             <Accordion.Panel>
@@ -345,6 +395,16 @@ export const MonthTable = () => {
           <TextInput label="Due date" type="date" mb="sm" {...editForm.getInputProps('dueDate')} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setEditingExpense(null)}>Cancel</Button>
+            <Button type="submit">Save</Button>
+          </Group>
+        </form>
+      </Modal>
+
+      <Modal opened={!!budgetModal} onClose={() => setBudgetModal(null)} title="Set Category Budget">
+        <form onSubmit={budgetForm.onSubmit(handleSaveBudget)}>
+          <TextInput label="Budget amount" mb="sm" {...budgetForm.getInputProps('amount')} />
+          <Group justify="flex-end" mt="md">
+            <Button variant="default" onClick={() => setBudgetModal(null)}>Cancel</Button>
             <Button type="submit">Save</Button>
           </Group>
         </form>

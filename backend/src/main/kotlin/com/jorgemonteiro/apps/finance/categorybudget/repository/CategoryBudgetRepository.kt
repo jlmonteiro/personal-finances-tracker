@@ -39,4 +39,7 @@ class CategoryBudgetRepository(private val dsl: DSLContext) {
             .where(CATEGORY_BUDGETS.ID.eq(id))
             .returning()
             .fetchOne()!!
+
+    fun deleteById(id: UUID): Boolean =
+        dsl.deleteFrom(CATEGORY_BUDGETS).where(CATEGORY_BUDGETS.ID.eq(id)).execute() > 0
 }

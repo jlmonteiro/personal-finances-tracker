@@ -22,4 +22,10 @@ class CategoryBudgetController(private val service: CategoryBudgetService) {
         @RequestBody request: UpdateCategoryBudgetRequest,
     ): ResponseEntity<CategoryBudgetResponse> =
         ResponseEntity.ok(service.upsert(quarterId, categoryId, request))
+
+    @DeleteMapping("/{categoryId}")
+    fun delete(@PathVariable quarterId: UUID, @PathVariable categoryId: UUID): ResponseEntity<Void> {
+        service.delete(quarterId, categoryId)
+        return ResponseEntity.noContent().build()
+    }
 }

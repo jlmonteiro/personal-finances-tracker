@@ -20,3 +20,6 @@ export const upsertCategoryBudget = (quarterId: string, categoryId: string, amou
     method: 'PUT',
     body: JSON.stringify({ amount }),
   })
+
+export const deleteCategoryBudget = (quarterId: string, categoryId: string) =>
+  request<void>(`/quarters/${quarterId}/budgets/${categoryId}`, { method: 'DELETE' })

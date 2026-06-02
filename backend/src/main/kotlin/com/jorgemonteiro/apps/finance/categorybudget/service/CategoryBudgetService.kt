@@ -39,6 +39,12 @@ class CategoryBudgetService(
         }
     }
 
+    /** Deletes a category budget. */
+    fun delete(quarterId: UUID, categoryId: UUID) {
+        val record = repository.findByQuarterAndCategory(quarterId, categoryId) ?: return
+        repository.deleteById(record.id!!)
+    }
+
     private fun toResponse(record: com.jorgemonteiro.apps.finance.`data`.jooq.tables.records.CategoryBudgetsRecord): CategoryBudgetResponse {
         val category = categoryRepository.findById(record.categoryId!!)!!
         return CategoryBudgetResponse(
