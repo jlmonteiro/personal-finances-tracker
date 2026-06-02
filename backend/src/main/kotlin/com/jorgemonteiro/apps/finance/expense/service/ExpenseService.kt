@@ -2,6 +2,7 @@ package com.jorgemonteiro.apps.finance.expense.service
 
 import com.jorgemonteiro.apps.finance.`data`.jooq.tables.records.ExpensesRecord
 import com.jorgemonteiro.apps.finance.category.repository.CategoryRepository
+import com.jorgemonteiro.apps.finance.categorybudget.service.CategoryBudgetService
 import com.jorgemonteiro.apps.finance.common.UuidV7
 import com.jorgemonteiro.apps.finance.exception.EntityNotFoundException
 import com.jorgemonteiro.apps.finance.exception.ValidationException
@@ -23,6 +24,7 @@ class ExpenseService(
     private val monthRepository: FinancialMonthRepository,
     private val payeeRepository: PayeeRepository,
     private val categoryRepository: CategoryRepository,
+    private val categoryBudgetService: CategoryBudgetService,
 ) {
 
     /** Lists expenses for a financial month. */
@@ -55,8 +57,13 @@ class ExpenseService(
             description = request.description,
             expectedValue = request.expectedValue,
             dueDate = request.dueDate,
+            bankAccountId = request.bankAccountId,
             now = OffsetDateTime.now(),
         )
+
+        // Auto-create budget at €0 if none exists for this quarter/category
+        categoryBudgetService.ensureBudgetExists(quarter.id!!, request.categoryId)
+
         return toResponse(record)
     }
 
@@ -112,6 +119,7 @@ class ExpenseService(
             paymentDate = record.paymentDate,
             status = deriveStatus(record),
             isOverride = record.isOverride!!,
+            bankAccountId = record.bankAccountId,
             createdAt = record.createdAt!!,
         )
     }

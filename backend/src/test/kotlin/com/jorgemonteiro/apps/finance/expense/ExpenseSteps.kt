@@ -29,10 +29,24 @@ class ExpenseSteps {
     private lateinit var context: ScenarioContext
 
     private var lastExpenseId: String? = null
+    private var bankAccountId: String? = null
 
     @Before
     fun cleanup() {
         dsl.execute("TRUNCATE expenses CASCADE")
+        dsl.execute("TRUNCATE category_budgets CASCADE")
+        dsl.execute("TRUNCATE bank_accounts CASCADE")
+    }
+
+    private fun ensureBankAccount(): String {
+        if (bankAccountId != null) return bankAccountId!!
+        val r = mockMvc.perform(
+            post("/api/v1/bank-accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"name": "Main Account"}""")
+        ).andReturn()
+        bankAccountId = JsonPath.read(r.response.contentAsString, "$.id")
+        return bankAccountId!!
     }
 
     private fun getMonthId(): String {
@@ -55,10 +69,11 @@ class ExpenseSteps {
         val monthId = getMonthId()
         val payeeId = getPayeeId()
         val categoryId = getCategoryId()
+        val accountId = ensureBankAccount()
         val r = mockMvc.perform(
             post("/api/v1/financial-months/$monthId/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"payeeId":"$payeeId","categoryId":"$categoryId","title":"$title","expectedValue":$value,"dueDate":"$dueDate"}""")
+                .content("""{"payeeId":"$payeeId","categoryId":"$categoryId","title":"$title","expectedValue":$value,"dueDate":"$dueDate","bankAccountId":"$accountId"}""")
         ).andReturn()
         lastExpenseId = JsonPath.read(r.response.contentAsString, "$.id")
     }
@@ -68,10 +83,11 @@ class ExpenseSteps {
         val monthId = getMonthId()
         val payeeId = getPayeeId()
         val categoryId = getCategoryId()
+        val accountId = ensureBankAccount()
         context.result = mockMvc.perform(
             post("/api/v1/financial-months/$monthId/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"payeeId":"$payeeId","categoryId":"$categoryId","title":"$title","expectedValue":$value,"dueDate":"$dueDate"}""")
+                .content("""{"payeeId":"$payeeId","categoryId":"$categoryId","title":"$title","expectedValue":$value,"dueDate":"$dueDate","bankAccountId":"$accountId"}""")
         )
         try {
             lastExpenseId = JsonPath.read(context.result.andReturn().response.contentAsString, "$.id")
@@ -82,10 +98,11 @@ class ExpenseSteps {
     fun createExpenseWithRandomPayee(dueDate: String) {
         val monthId = getMonthId()
         val categoryId = getCategoryId()
+        val accountId = ensureBankAccount()
         context.result = mockMvc.perform(
             post("/api/v1/financial-months/$monthId/expenses")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"payeeId":"${UUID.randomUUID()}","categoryId":"$categoryId","title":"Test","expectedValue":10,"dueDate":"$dueDate"}""")
+                .content("""{"payeeId":"${UUID.randomUUID()}","categoryId":"$categoryId","title":"Test","expectedValue":10,"dueDate":"$dueDate","bankAccountId":"$accountId"}""")
         )
     }
 

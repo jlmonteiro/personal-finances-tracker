@@ -28,6 +28,7 @@ data class ExpenseResponse(
     val paymentDate: LocalDate?,
     val status: ExpenseStatus,
     val isOverride: Boolean,
+    val bankAccountId: UUID?,
     val createdAt: OffsetDateTime,
 )
 
@@ -44,6 +45,7 @@ data class CreateExpenseRequest(
     val description: String? = null,
     @field:NotNull val expectedValue: BigDecimal,
     @field:NotNull val dueDate: LocalDate,
+    @field:NotNull val bankAccountId: UUID,
 )
 
 /**

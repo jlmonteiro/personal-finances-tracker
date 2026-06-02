@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/005-expenses.yaml
   - include:
       file: db/changelog/006-recurring-expenses.yaml
+  - include:
+      file: db/changelog/007-budgets-bank-accounts.yaml

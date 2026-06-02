@@ -31,7 +31,7 @@ class ExpenseRepository(private val dsl: DSLContext) {
     fun insert(
         id: UUID, quarterId: UUID, payeeId: UUID, categoryId: UUID,
         title: String, description: String?, expectedValue: BigDecimal,
-        dueDate: LocalDate, now: OffsetDateTime,
+        dueDate: LocalDate, bankAccountId: UUID, now: OffsetDateTime,
     ): ExpensesRecord =
         dsl.insertInto(EXPENSES)
             .set(EXPENSES.ID, id)
@@ -42,6 +42,7 @@ class ExpenseRepository(private val dsl: DSLContext) {
             .set(EXPENSES.DESCRIPTION, description)
             .set(EXPENSES.EXPECTED_VALUE, expectedValue)
             .set(EXPENSES.DUE_DATE, dueDate)
+            .set(EXPENSES.BANK_ACCOUNT_ID, bankAccountId)
             .set(EXPENSES.CREATED_AT, now)
             .set(EXPENSES.UPDATED_AT, now)
             .returning()
