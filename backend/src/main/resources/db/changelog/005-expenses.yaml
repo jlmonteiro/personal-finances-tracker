@@ -1,0 +1,123 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-expenses
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: expenses
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: quarter_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payee_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: expected_value
+                  type: decimal(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: actual_value
+                  type: decimal(12,2)
+              - column:
+                  name: due_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_date
+                  type: date
+              - column:
+                  name: is_override
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: expenses
+            baseColumnNames: quarter_id
+            referencedTableName: quarters
+            referencedColumnNames: id
+            constraintName: fk_expenses_quarter
+        - addForeignKeyConstraint:
+            baseTableName: expenses
+            baseColumnNames: payee_id
+            referencedTableName: payees
+            referencedColumnNames: id
+            constraintName: fk_expenses_payee
+        - addForeignKeyConstraint:
+            baseTableName: expenses
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_expenses_category
+        - sql:
+            sql: >
+              ALTER TABLE expenses
+              ADD CONSTRAINT chk_expenses_non_negative_expected
+              CHECK (expected_value >= 0)
+        - sql:
+            sql: >
+              ALTER TABLE expenses
+              ADD CONSTRAINT chk_expenses_positive_actual
+              CHECK (actual_value IS NULL OR actual_value > 0)
+        - createIndex:
+            indexName: idx_expenses_quarter_id
+            tableName: expenses
+            columns:
+              - column:
+                  name: quarter_id
+        - createIndex:
+            indexName: idx_expenses_due_date
+            tableName: expenses
+            columns:
+              - column:
+                  name: due_date
+        - createIndex:
+            indexName: idx_expenses_payee_id
+            tableName: expenses
+            columns:
+              - column:
+                  name: payee_id
+        - createIndex:
+            indexName: idx_expenses_category_id
+            tableName: expenses
+            columns:
+              - column:
+                  name: category_id
