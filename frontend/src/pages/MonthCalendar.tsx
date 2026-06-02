@@ -30,6 +30,7 @@ import { getFinancialMonth, getQuarters, listFinancialMonths } from '../api/fina
 import { listExpenses, createExpense, updateExpense, deleteExpense, ExpenseResponse } from '../api/expenses'
 import { listPayees } from '../api/payees'
 import { listCategories } from '../api/categories'
+import { listBankAccounts } from '../api/bank-accounts'
 import { useConfiguration } from '../hooks/useConfiguration'
 import { getErrorMessage } from '../api/client'
 import { MonthSidebar } from '../components/MonthSidebar'
@@ -68,20 +69,23 @@ export const MonthCalendar = () => {
   })
   const { data: payees = [] } = useQuery({ queryKey: ['payees'], queryFn: listPayees })
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: listCategories })
+  const { data: bankAccounts = [] } = useQuery({ queryKey: ['bank-accounts'], queryFn: listBankAccounts })
 
   const addForm = useForm({
-    initialValues: { payeeId: '', categoryId: '', title: '', expectedValue: '', dueDate: '' },
+    initialValues: { payeeId: '', categoryId: '', title: '', expectedValue: '', dueDate: '', bankAccountId: '' },
     validate: {
       payeeId: (v) => (v ? null : 'Required'),
       categoryId: (v) => (v ? null : 'Required'),
       title: (v) => (v.trim() ? null : 'Required'),
       expectedValue: (v) => (parseFloat(v) > 0 ? null : 'Must be > 0'),
       dueDate: (v) => (v ? null : 'Required'),
+      bankAccountId: (v) => (v ? null : 'Required'),
     },
   })
 
   const selectedPayee = payees.find((p) => p.id === addForm.values.payeeId)
   const payeeOptions = payees.map((p) => ({ value: p.id, label: p.name }))
+  const bankAccountOptions = bankAccounts.map((a) => ({ value: a.id, label: a.name }))
   const categoryOptions = selectedPayee
     ? selectedPayee.categories.map((c) => ({ value: c.id, label: c.name }))
     : categories.map((c) => ({ value: c.id, label: c.name }))
@@ -100,6 +104,7 @@ export const MonthCalendar = () => {
         title: values.title,
         expectedValue: parseFloat(values.expectedValue),
         dueDate: values.dueDate,
+        bankAccountId: values.bankAccountId,
       })
       await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
       setShowAddExpense(false)
@@ -320,6 +325,7 @@ export const MonthCalendar = () => {
           <Select label="Category" data={categoryOptions} searchable mb="sm" {...addForm.getInputProps('categoryId')} />
           <TextInput label="Expected value" mb="sm" {...addForm.getInputProps('expectedValue')} />
           <TextInput label="Due date" type="date" mb="sm" {...addForm.getInputProps('dueDate')} />
+          <Select label="Bank Account" data={bankAccountOptions} mb="sm" {...addForm.getInputProps('bankAccountId')} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setShowAddExpense(false)}>Cancel</Button>
             <Button type="submit">Save</Button>

@@ -2,9 +2,10 @@
  * Shared sidebar for monthly views — income, remaining, category breakdown.
  */
 import { Paper, Text, Group, ThemeIcon, Stack, Badge, List, RingProgress } from '@mantine/core'
-import { IconWallet, IconCash } from '@tabler/icons-react'
+import { IconWallet, IconCash, IconBuildingBank } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 import { listIncomeSources } from '../api/income-sources'
+import { listBankAccounts } from '../api/bank-accounts'
 import { useConfiguration } from '../hooks/useConfiguration'
 import { ExpenseResponse } from '../api/expenses'
 
@@ -20,6 +21,7 @@ export const MonthSidebar = ({ expenses }: MonthSidebarProps) => {
   const fmt = (v: number) => new Intl.NumberFormat('en', { style: 'currency', currency }).format(v)
 
   const { data: incomeData } = useQuery({ queryKey: ['income-sources'], queryFn: () => listIncomeSources() })
+  const { data: bankAccounts = [] } = useQuery({ queryKey: ['bank-accounts'], queryFn: listBankAccounts })
   const incomeSources = incomeData?.data ?? []
   const totalIncome = incomeSources.reduce((s, i) => s + parseFloat(i.amount.value), 0)
   const totalBudget = expenses.reduce((s, e) => s + e.expectedValue, 0)
@@ -84,6 +86,28 @@ export const MonthSidebar = ({ expenses }: MonthSidebarProps) => {
                 <Text size="xs" fw={500}>{fmt(d.total)}</Text>
               </Group>
             ))}
+          </Stack>
+        </Paper>
+      )}
+
+      {bankAccounts.length > 0 && (
+        <Paper p="md" withBorder radius="md" shadow="xs">
+          <Group gap="xs" mb="sm">
+            <ThemeIcon variant="light" color="violet" size="lg"><IconBuildingBank size={20} /></ThemeIcon>
+            <Text size="sm" fw={500}>By Account</Text>
+          </Group>
+          <Stack gap={4}>
+            {bankAccounts.map((account) => {
+              const reserved = expenses
+                .filter((e) => e.bankAccountId === account.id && e.status !== 'PAID')
+                .reduce((s, e) => s + e.expectedValue, 0)
+              return (
+                <Group key={account.id} gap="xs">
+                  <Text size="xs" style={{ flex: 1 }}>{account.name}</Text>
+                  <Text size="xs" fw={700} c={reserved > 0 ? 'violet' : 'dimmed'}>{fmt(reserved)}</Text>
+                </Group>
+              )
+            })}
           </Stack>
         </Paper>
       )}

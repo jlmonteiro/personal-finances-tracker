@@ -17,6 +17,7 @@ export interface ExpenseResponse {
   paymentDate: string | null
   status: 'PENDING' | 'PAID' | 'OVERDUE'
   isOverride: boolean
+  bankAccountId: string | null
   createdAt: string
 }
 
@@ -27,6 +28,7 @@ export interface CreateExpenseRequest {
   description?: string
   expectedValue: number
   dueDate: string
+  bankAccountId: string
 }
 
 export interface UpdateExpenseRequest {

@@ -48,6 +48,8 @@ import {
 } from '../api/expenses'
 import { listPayees } from '../api/payees'
 import { listCategories } from '../api/categories'
+import { listBankAccounts } from '../api/bank-accounts'
+import { listCategoryBudgets, CategoryBudgetResponse } from '../api/category-budgets'
 import { getErrorMessage } from '../api/client'
 import { useConfiguration } from '../hooks/useConfiguration'
 import { MonthSidebar } from '../components/MonthSidebar'
@@ -76,17 +78,34 @@ export const MonthTable = () => {
   const { data: quarters = [] } = useQuery({ queryKey: ['quarters', id], queryFn: () => getQuarters(id!), enabled: !!id })
   const { data: expenses = [] } = useQuery({ queryKey: ['expenses', id], queryFn: () => listExpenses(id!), enabled: !!id })
   const { data: months = [] } = useQuery({ queryKey: ['financial-months'], queryFn: listFinancialMonths })
+
+  // Fetch budgets for all quarters
+  const quarterIds = quarters.map((q) => q.id)
+  const { data: allBudgets = [] } = useQuery({
+    queryKey: ['category-budgets', id],
+    queryFn: async () => {
+      const results: CategoryBudgetResponse[] = []
+      for (const qId of quarterIds) {
+        const budgets = await listCategoryBudgets(qId)
+        results.push(...budgets)
+      }
+      return results
+    },
+    enabled: quarterIds.length > 0,
+  })
   const { data: payees = [] } = useQuery({ queryKey: ['payees'], queryFn: listPayees })
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: listCategories })
+  const { data: bankAccounts = [] } = useQuery({ queryKey: ['bank-accounts'], queryFn: listBankAccounts })
 
   const addForm = useForm({
-    initialValues: { payeeId: '', categoryId: '', title: '', expectedValue: '', dueDate: '' },
+    initialValues: { payeeId: '', categoryId: '', title: '', expectedValue: '', dueDate: '', bankAccountId: '' },
     validate: {
       payeeId: (v) => (v ? null : 'Required'),
       categoryId: (v) => (v ? null : 'Required'),
       title: (v) => (v.trim() ? null : 'Required'),
       expectedValue: (v) => (parseFloat(v) > 0 ? null : 'Must be > 0'),
       dueDate: (v) => (v ? null : 'Required'),
+      bankAccountId: (v) => (v ? null : 'Required'),
     },
   })
   const selectedPayee = payees.find((p) => p.id === addForm.values.payeeId)
@@ -94,13 +113,14 @@ export const MonthTable = () => {
     ? selectedPayee.categories.map((c) => ({ value: c.id, label: c.name }))
     : categories.map((c) => ({ value: c.id, label: c.name }))
   const payeeOptions = payees.map((p) => ({ value: p.id, label: p.name }))
+  const bankAccountOptions = bankAccounts.map((a) => ({ value: a.id, label: a.name }))
 
   const payForm = useForm({ initialValues: { actualValue: '', paymentDate: '' } })
   const editForm = useForm({ initialValues: { title: '', expectedValue: '', dueDate: '' } })
 
   const handleAddExpense = async (values: typeof addForm.values) => {
     try {
-      await createExpense(id!, { payeeId: values.payeeId, categoryId: values.categoryId, title: values.title, expectedValue: parseFloat(values.expectedValue), dueDate: values.dueDate })
+      await createExpense(id!, { payeeId: values.payeeId, categoryId: values.categoryId, title: values.title, expectedValue: parseFloat(values.expectedValue), dueDate: values.dueDate, bankAccountId: values.bankAccountId })
       await queryClient.invalidateQueries({ queryKey: ['expenses', id] })
       setShowAddExpense(false)
       addForm.reset()
@@ -220,7 +240,10 @@ export const MonthTable = () => {
                   {quarterExpenses.length > 0 ? (
                     <Accordion multiple defaultValue={[...grouped.keys()]}>
                       {[...grouped.entries()].map(([catId, group]) => {
-                        const catTotal = group.expenses.reduce((s, e) => s + e.expectedValue, 0)
+                        const catSpent = group.expenses.filter((e) => e.status === 'PAID').reduce((s, e) => s + (e.actualValue ?? 0), 0)
+                        const budget = allBudgets.find((b) => b.categoryId === catId && b.quarterId === q.id)
+                        const planned = budget?.amount ?? 0
+                        const catRemaining = planned - catSpent
                         return (
                           <Accordion.Item key={catId} value={catId}>
                             <Accordion.Control>
@@ -229,8 +252,11 @@ export const MonthTable = () => {
                                   {resolveIcon(group.icon, 14) ?? <IconReceipt size={14} />}
                                 </ThemeIcon>
                                 <Text fw={500}>{group.name}</Text>
-                                <Badge variant="light" size="sm">{fmt(catTotal)}</Badge>
-                                <Badge variant="dot" size="sm">{group.expenses.length} items</Badge>
+                                <Badge variant="light" color="blue" size="sm">Planned: {fmt(planned)}</Badge>
+                                <Badge variant="light" color="green" size="sm">Spent: {fmt(catSpent)}</Badge>
+                                <Badge variant="light" color={catRemaining >= 0 ? 'teal' : 'red'} size="sm">
+                                  Remaining: {fmt(catRemaining)}
+                                </Badge>
                               </Group>
                             </Accordion.Control>
                             <Accordion.Panel>
@@ -293,6 +319,7 @@ export const MonthTable = () => {
           <Select label="Category" data={categoryOptions} searchable mb="sm" {...addForm.getInputProps('categoryId')} />
           <TextInput label="Expected value" mb="sm" {...addForm.getInputProps('expectedValue')} />
           <TextInput label="Due date" type="date" mb="sm" {...addForm.getInputProps('dueDate')} />
+          <Select label="Bank Account" data={bankAccountOptions} mb="sm" {...addForm.getInputProps('bankAccountId')} />
           <Group justify="flex-end" mt="md">
             <Button variant="default" onClick={() => setShowAddExpense(false)}>Cancel</Button>
             <Button type="submit">Save</Button>
