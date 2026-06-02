@@ -4,11 +4,13 @@
  */
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { AppShell, NavLink, LoadingOverlay } from '@mantine/core'
-import { IconDashboard, IconSettings } from '@tabler/icons-react'
+import { IconDashboard, IconSettings, IconCategory, IconUsers } from '@tabler/icons-react'
 import { useConfiguration } from './hooks/useConfiguration'
 import { Setup } from './pages/Setup'
 import { Dashboard } from './pages/Dashboard'
 import { Settings } from './pages/Settings'
+import { Categories } from './pages/Categories'
+import { Payees } from './pages/Payees'
 
 export const App = () => {
   const { data: config, isLoading, isError } = useConfiguration()
@@ -39,6 +41,18 @@ export const App = () => {
           onClick={() => navigate('/')}
         />
         <NavLink
+          label="Categories"
+          leftSection={<IconCategory size={20} />}
+          active={location.pathname === '/categories'}
+          onClick={() => navigate('/categories')}
+        />
+        <NavLink
+          label="Payees"
+          leftSection={<IconUsers size={20} />}
+          active={location.pathname === '/payees'}
+          onClick={() => navigate('/payees')}
+        />
+        <NavLink
           label="Settings"
           leftSection={<IconSettings size={20} />}
           active={location.pathname === '/settings'}
@@ -48,6 +62,8 @@ export const App = () => {
       <AppShell.Main>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/payees" element={<Payees />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
