@@ -1,0 +1,6 @@
+extends:
+  - recommended
+
+rules:
+  security-defined: off # TODO: Enable when OAuth2 is implemented (EPIC-6)
+  operation-4xx-response: warn

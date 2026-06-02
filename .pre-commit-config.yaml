@@ -27,3 +27,17 @@ repos:
         language: system
         files: \.(ts|tsx)$
         pass_filenames: false
+
+      - id: version-consistency
+        name: version consistency
+        entry: scripts/check-version-consistency.sh
+        language: script
+        files: (gradle\.properties|frontend/package\.json)
+        pass_filenames: false
+
+      - id: openapi-lint
+        name: openapi lint
+        entry: npx @redocly/cli lint docs/api/openapi.yaml
+        language: system
+        files: (docs/api/.*\.yaml|redocly\.yaml)
+        pass_filenames: false

@@ -68,14 +68,16 @@ graph LR
 
 ## Key Design Decisions
 
-| ADR | Decision | Status |
-|-----|----------|--------|
-| [ADR-1](adrs.md#adr-1) | Multi-module Gradle build | Accepted |
-| [ADR-2](adrs.md#adr-2) | Spring Boot 4.x with Kotlin | Accepted |
-| [ADR-3](adrs.md#adr-3) | React + Mantine + Vite for frontend | Accepted |
-| [ADR-4](adrs.md#adr-4) | OAuth2 with dev fake identity | Accepted |
-| [ADR-5](adrs.md#adr-5) | PostgreSQL with Docker Compose | Accepted |
-| [ADR-6](adrs.md#adr-6) | Liquibase + JOOQ for data layer | Accepted |
-| [ADR-7](adrs.md#adr-7) | Micro-frontend composition via micro-lc | Accepted |
-| [ADR-8](adrs.md#adr-8) | Tabler Icons for category visuals | Accepted |
-| [ADR-9](adrs.md#adr-9) | GitHub Actions for CI/CD | Accepted |
+| ADR                                                               | Decision                                   | Status   |
+|-------------------------------------------------------------------|--------------------------------------------|----------|
+| [ADR-1](adrs.md#adr-1-multi-module-gradle-build)                  | Multi-module Gradle build                  | Accepted |
+| [ADR-2](adrs.md#adr-2-spring-boot-4x-with-kotlin)                 | Spring Boot 4.x with Kotlin                | Accepted |
+| [ADR-3](adrs.md#adr-3-react--mantine--vite-for-frontend)          | React + Mantine + Vite for frontend        | Accepted |
+| [ADR-4](adrs.md#adr-4-oauth2-with-dev-fake-identity)              | OAuth2 with dev fake identity              | Accepted |
+| [ADR-5](adrs.md#adr-5-postgresql-with-docker-compose)             | PostgreSQL with Docker Compose             | Accepted |
+| [ADR-6](adrs.md#adr-6-liquibase--jooq-for-data-layer)             | Liquibase + JOOQ for data layer            | Accepted |
+| [ADR-7](adrs.md#adr-7-micro-frontend-composition-via-micro-lc)    | Micro-frontend composition via micro-lc    | Accepted |
+| [ADR-8](adrs.md#adr-8-tabler-icons-for-category-visuals)          | Tabler Icons for category visuals          | Accepted |
+| [ADR-9](adrs.md#adr-9-github-actions-for-cicd)                    | GitHub Actions for CI/CD                   | Accepted |
+| [ADR-10](adrs.md#adr-10-kapt-for-annotation-processing-mapstruct) | kapt for annotation processing (MapStruct) | Accepted |
+| [ADR-11](adrs.md#adr-11-uuidv7-for-primary-keys)                  | UUIDv7 for primary keys                    | Accepted |

@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: personal-finances-tracker
+
+logging:
+  level:
+    sun.rmi.transport.tcp: OFF
   docker:
     compose:
       lifecycle-management: start-only
@@ -11,5 +15,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/finances
     username: finances
     password: finances
+  jooq:
+    sql-dialect: postgres
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml

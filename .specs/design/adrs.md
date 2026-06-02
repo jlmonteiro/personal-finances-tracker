@@ -330,3 +330,79 @@ GitHub Actions is native to the hosting platform, free for open-source, and has 
 - Workflows defined in `.github/workflows/`
 - Secrets managed via GitHub repository settings
 - Docker Compose available in GitHub Actions runners for integration tests
+
+---
+
+## ADR-10: kapt for Annotation Processing (MapStruct)
+
+**Status:** Accepted (revisit when MapStruct KSP processor is stable)
+**Date:** 2026-06-01
+**Traces:** ADR-6 (Liquibase + JOOQ + MapStruct)
+
+### Problem
+
+MapStruct requires an annotation processor to generate mapper implementations. Kotlin offers two options: `kapt` (legacy bridge to Java annotation processors) and `KSP` (Kotlin-native symbol processing).
+
+### Solution
+
+Use `kapt` with `org.mapstruct:mapstruct-processor`.
+
+### Alternatives Considered
+
+| Alternative | Pros | Cons |
+|-------------|------|------|
+| KSP + MapStruct | Faster builds, Kotlin-native | MapStruct has no KSP processor yet — fails with "No providers found" |
+| Manual mapping | No build tooling needed | Boilerplate, error-prone as entities grow |
+
+### Rationale
+
+KSP was attempted first but MapStruct does not ship a KSP-compatible processor (as of v1.6.3). The `mapstruct-processor` is a Java annotation processor that only works via `kapt`. The build speed difference is negligible for this project size (~2s overhead).
+
+### Consequences
+
+- `kapt` plugin applied in `backend/build.gradle.kts`
+- `kaptGenerateStubsKotlin` task must depend on `jooqCodegen` (generated JOOQ classes are inputs to MapStruct)
+- Kotlin version is not coupled to a KSP release version
+- **Migration path:** When MapStruct releases a KSP processor, replace `kapt` with `ksp` and remove the stub generation dependency
+
+---
+
+## ADR-11: UUIDv7 for Primary Keys
+
+**Status:** Accepted
+**Date:** 2026-06-01
+**Traces:** All entities
+
+### Problem
+
+Need a primary key strategy that is globally unique, doesn't leak information, and performs well with B-tree indexes.
+
+### Solution
+
+Use UUIDv7 (RFC 9562), generated application-side via `com.github.f4b6a3:uuid-creator`. No DB-side default — the application always provides the ID.
+
+### Alternatives Considered
+
+| Alternative | Pros | Cons |
+|-------------|------|------|
+| UUIDv4 (`UUID.randomUUID()`) | Built into JDK, no dependency | Random — B-tree fragmentation on insert |
+| Sequential BIGINT | Best insert performance, smallest storage | Enumerable, leaks record count, no client-side generation |
+| UUIDv7 with DB default (`uuidv7()`) | Fallback for manual inserts | Adds PostgreSQL-specific dependency, breaks JOOQ in-memory codegen |
+| ULID | Time-ordered, compact string representation | Less standard, no JDK support, not a UUID |
+
+### Rationale
+
+UUIDv7 gives time-ordered inserts (no index fragmentation), global uniqueness, opacity (no enumeration), and client-side generation (ID known before DB round-trip). The `uuid-creator` library is 50KB with no transitive dependencies.
+
+DB-side default was removed because it uses `gen_random_uuid()` / `uuidv7()` which breaks JOOQ's LiquibaseDatabase in-memory code generation (H2 doesn't support PostgreSQL functions).
+
+### Consequences
+
+- `com.github.f4b6a3:uuid-creator` dependency in backend
+- `UuidV7.generate()` utility used in all services before insert
+- No DB default on `id` columns — application must always provide the ID
+- IDs are sortable by creation time without needing `created_at`
+
+### Future
+
+JDK does not yet support UUIDv7 natively (`java.util.UUID` only generates v4). [JDK-8327761](https://bugs.openjdk.org/browse/JDK-8327761) tracks adding UUIDv7 support, likely targeting JDK 25 or 26. When available, replace `uuid-creator` with the JDK method — the `UuidV7.generate()` utility isolates this to a one-line change.
