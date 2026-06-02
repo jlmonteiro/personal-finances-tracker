@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/004-financial-months.yaml
   - include:
       file: db/changelog/005-expenses.yaml
+  - include:
+      file: db/changelog/006-recurring-expenses.yaml
