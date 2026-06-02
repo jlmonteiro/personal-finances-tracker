@@ -56,4 +56,5 @@ data class UpdateExpenseRequest(
     val actualValue: BigDecimal? = null,
     val dueDate: LocalDate? = null,
     val paymentDate: LocalDate? = null,
+    val clearPayment: Boolean? = null,
 )

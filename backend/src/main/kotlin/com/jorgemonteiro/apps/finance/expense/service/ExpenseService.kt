@@ -67,9 +67,9 @@ class ExpenseService(
         val title = request.title ?: existing.title!!
         val description = request.description ?: existing.description
         val expectedValue = request.expectedValue ?: existing.expectedValue!!
-        val actualValue = request.actualValue ?: existing.actualValue
+        val actualValue = if (request.clearPayment == true) null else request.actualValue ?: existing.actualValue
         val dueDate = request.dueDate ?: existing.dueDate!!
-        val paymentDate = request.paymentDate ?: existing.paymentDate
+        val paymentDate = if (request.clearPayment == true) null else request.paymentDate ?: existing.paymentDate
         val isOverride = request.expectedValue != null || existing.isOverride!!
 
         val record = repository.update(

@@ -13,6 +13,7 @@ import { Categories } from './pages/Categories'
 import { Payees } from './pages/Payees'
 import { Months } from './pages/Months'
 import { MonthTable } from './pages/MonthTable'
+import { MonthCalendar } from './pages/MonthCalendar'
 
 export const App = () => {
   const { data: config, isLoading, isError } = useConfiguration()
@@ -72,6 +73,7 @@ export const App = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/months" element={<Months />} />
           <Route path="/month/:id" element={<MonthTable />} />
+          <Route path="/month/:id/calendar" element={<MonthCalendar />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/payees" element={<Payees />} />
           <Route path="/settings" element={<Settings />} />

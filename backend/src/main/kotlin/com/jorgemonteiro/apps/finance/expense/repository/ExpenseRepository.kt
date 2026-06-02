@@ -51,19 +51,30 @@ class ExpenseRepository(private val dsl: DSLContext) {
         id: UUID, title: String, description: String?, expectedValue: BigDecimal,
         actualValue: BigDecimal?, dueDate: LocalDate, paymentDate: LocalDate?,
         isOverride: Boolean, now: OffsetDateTime,
-    ): ExpensesRecord =
-        dsl.update(EXPENSES)
+    ): ExpensesRecord {
+        val query = dsl.update(EXPENSES)
             .set(EXPENSES.TITLE, title)
             .set(EXPENSES.DESCRIPTION, description)
             .set(EXPENSES.EXPECTED_VALUE, expectedValue)
-            .set(EXPENSES.ACTUAL_VALUE, actualValue)
             .set(EXPENSES.DUE_DATE, dueDate)
-            .set(EXPENSES.PAYMENT_DATE, paymentDate)
             .set(EXPENSES.IS_OVERRIDE, isOverride)
             .set(EXPENSES.UPDATED_AT, now)
-            .where(EXPENSES.ID.eq(id))
+
+        if (actualValue != null) {
+            query.set(EXPENSES.ACTUAL_VALUE, actualValue)
+        } else {
+            query.setNull(EXPENSES.ACTUAL_VALUE)
+        }
+        if (paymentDate != null) {
+            query.set(EXPENSES.PAYMENT_DATE, paymentDate)
+        } else {
+            query.setNull(EXPENSES.PAYMENT_DATE)
+        }
+
+        return query.where(EXPENSES.ID.eq(id))
             .returning()
             .fetchOne()!!
+    }
 
     fun deleteById(id: UUID): Boolean =
         dsl.deleteFrom(EXPENSES).where(EXPENSES.ID.eq(id)).execute() > 0
