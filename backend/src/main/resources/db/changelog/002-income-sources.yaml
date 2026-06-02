@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-income-sources
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: income_sources
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: amount
+                  type: decimal(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: varchar(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: frequency
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_date_type
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_date_rule
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: date
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - sql:
+            sql: >
+              ALTER TABLE income_sources
+              ADD CONSTRAINT chk_income_sources_positive_amount
+              CHECK (amount > 0)
+        - sql:
+            sql: >
+              ALTER TABLE income_sources
+              ADD CONSTRAINT chk_income_sources_frequency
+              CHECK (frequency IN ('MONTHLY', 'WEEKLY', 'FORTNIGHTLY', 'FOUR_WEEKLY'))
+        - sql:
+            sql: >
+              ALTER TABLE income_sources
+              ADD CONSTRAINT chk_income_sources_date_type
+              CHECK (payment_date_type IN ('FIXED', 'RELATIVE'))

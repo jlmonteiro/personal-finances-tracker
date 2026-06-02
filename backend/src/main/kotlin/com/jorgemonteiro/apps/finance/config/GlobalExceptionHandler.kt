@@ -2,6 +2,7 @@ package com.jorgemonteiro.apps.finance.config
 
 import com.jorgemonteiro.apps.finance.exception.EntityConflictException
 import com.jorgemonteiro.apps.finance.exception.EntityNotFoundException
+import com.jorgemonteiro.apps.finance.exception.ValidationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -41,5 +42,15 @@ class GlobalExceptionHandler {
     @ExceptionHandler(EntityConflictException::class)
     fun handleConflict(ex: EntityConflictException): ProblemDetail {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.message ?: "Conflict")
+    }
+
+    /**
+     * Handles business validation exceptions. Returns 422.
+     */
+    @ExceptionHandler(ValidationException::class)
+    fun handleBusinessValidation(ex: ValidationException): ProblemDetail {
+        val detail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, "Validation failed")
+        detail.setProperty("errors", ex.errors.map { mapOf("message" to it) })
+        return detail
     }
 }

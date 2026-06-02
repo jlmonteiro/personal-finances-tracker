@@ -19,3 +19,8 @@ abstract class EntityNotFoundException(message: String) : BusinessException(mess
  * Base for entity conflict exceptions (duplicates, constraint violations). Maps to HTTP 409.
  */
 abstract class EntityConflictException(message: String) : BusinessException(message)
+
+/**
+ * Base for validation exceptions (invalid business rules). Maps to HTTP 422.
+ */
+abstract class ValidationException(message: String, val errors: List<String>) : BusinessException(message)
