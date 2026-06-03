@@ -1,0 +1,121 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-bank-accounts
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: bank_accounts
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: logo
+                  type: bytea
+              - column:
+                  name: logo_content_type
+                  type: varchar(50)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 007-create-category-budgets
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: category_budgets
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: quarter_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: decimal(12,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: category_budgets
+            baseColumnNames: quarter_id
+            referencedTableName: quarters
+            referencedColumnNames: id
+            constraintName: fk_category_budgets_quarter
+        - addForeignKeyConstraint:
+            baseTableName: category_budgets
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_category_budgets_category
+        - addUniqueConstraint:
+            tableName: category_budgets
+            columnNames: quarter_id, category_id
+            constraintName: uq_category_budgets_quarter_category
+        - sql:
+            sql: >
+              ALTER TABLE category_budgets
+              ADD CONSTRAINT chk_category_budgets_non_negative
+              CHECK (amount >= 0)
+
+  - changeSet:
+      id: 007-add-bank-account-to-expenses
+      author: jlmonteiro
+      changes:
+        - addColumn:
+            tableName: expenses
+            columns:
+              - column:
+                  name: bank_account_id
+                  type: uuid
+        - addForeignKeyConstraint:
+            baseTableName: expenses
+            baseColumnNames: bank_account_id
+            referencedTableName: bank_accounts
+            referencedColumnNames: id
+            constraintName: fk_expenses_bank_account

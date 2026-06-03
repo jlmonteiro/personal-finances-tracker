@@ -1,0 +1,108 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-recurring-expenses
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: recurring_expenses
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: payee_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: expected_value
+                  type: decimal(12,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: frequency
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: date
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: recurring_expenses
+            baseColumnNames: payee_id
+            referencedTableName: payees
+            referencedColumnNames: id
+            constraintName: fk_recurring_expenses_payee
+        - addForeignKeyConstraint:
+            baseTableName: recurring_expenses
+            baseColumnNames: category_id
+            referencedTableName: categories
+            referencedColumnNames: id
+            constraintName: fk_recurring_expenses_category
+        - sql:
+            sql: >
+              ALTER TABLE recurring_expenses
+              ADD CONSTRAINT chk_recurring_expenses_positive_value
+              CHECK (expected_value > 0)
+        - sql:
+            sql: >
+              ALTER TABLE recurring_expenses
+              ADD CONSTRAINT chk_recurring_expenses_frequency
+              CHECK (frequency IN ('MONTHLY', 'WEEKLY', 'FORTNIGHTLY', 'FOUR_WEEKLY'))
+        - addColumn:
+            tableName: expenses
+            columns:
+              - column:
+                  name: recurring_expense_id
+                  type: uuid
+        - addForeignKeyConstraint:
+            baseTableName: expenses
+            baseColumnNames: recurring_expense_id
+            referencedTableName: recurring_expenses
+            referencedColumnNames: id
+            constraintName: fk_expenses_recurring
+        - createIndex:
+            indexName: idx_expenses_recurring_id
+            tableName: expenses
+            columns:
+              - column:
+                  name: recurring_expense_id

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-02
+
+### Added
+
+- Categories API (CRUD with icon, duplicate name detection, 17 Cucumber tests)
+- Payees API (CRUD with category associations, validation, 16 Cucumber tests)
+- Categories frontend page (table with rendered Tabler icons, modal forms, delete confirmation)
+- Payees frontend page (MultiSelect for category associations, modal forms)
+- Sidebar navigation entries for Categories and Payees
+- Liquibase migration for categories, payees, payee_categories tables
+
 ## [0.3.0] - 2026-06-02
 
 ### Added
