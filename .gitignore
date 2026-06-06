@@ -29,3 +29,6 @@ backend/build/generated/
 # Kotlin
 .kotlin/
 *.tsbuildinfo
+
+# Backups
+backup/

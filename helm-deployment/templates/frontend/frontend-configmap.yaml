@@ -1,0 +1,12 @@
+{{- if .Values.frontend.config }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "finances.frontend.fullname" . }}-config
+  labels:
+    {{- include "finances.frontend.labels" . | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.frontend.config }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}

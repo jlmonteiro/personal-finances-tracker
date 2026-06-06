@@ -1,3 +1,5 @@
+import com.github.gradle.node.npm.task.NpmTask
+
 plugins {
     alias(libs.plugins.node.gradle)
 }
@@ -8,7 +10,9 @@ node {
     nodeProjectDir = projectDir
 }
 
-val npmBuild = tasks.register<com.github.gradle.node.npm.task.NpmTask>("npmBuild") {
+val npmBuild = tasks.register<NpmTask>("npmBuild") {
+    group = "frontend"
+    description = "Build the frontend production bundle"
     dependsOn(tasks.npmInstall)
     args = listOf("run", "build")
 
@@ -17,16 +21,22 @@ val npmBuild = tasks.register<com.github.gradle.node.npm.task.NpmTask>("npmBuild
     outputs.dir(file("dist"))
 }
 
-tasks.register<com.github.gradle.node.npm.task.NpmTask>("npmTest") {
+tasks.register<NpmTask>("npmTest") {
+    group = "frontend"
+    description = "Run frontend unit tests"
     dependsOn(tasks.npmInstall)
     args = listOf("run", "test", "--", "--run")
 }
 
-tasks.register<com.github.gradle.node.npm.task.NpmTask>("npmLint") {
+tasks.register<NpmTask>("npmLint") {
+    group = "frontend"
+    description = "Run frontend linter"
     dependsOn(tasks.npmInstall)
     args = listOf("run", "lint")
 }
 
 tasks.register("build") {
+    group = "frontend"
+    description = "Build the frontend (alias for npmBuild)"
     dependsOn(npmBuild)
 }

@@ -1,0 +1,106 @@
+## Backend configuration
+backend:
+  replicaCount: 1
+
+  image:
+    repository: ghcr.io/jlmonteiro/personal-finances-tracker/backend
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    limits:
+      memory: 384Mi
+    requests:
+      cpu: 250m
+      memory: 384Mi
+
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+  ## Environment variables injected via ConfigMap
+  config:
+    JAVA_OPTS: "-XX:MaxRAMPercentage=70.0"
+    SERVER_PORT: "8080"
+    SPRING_APPLICATION_NAME: personal-finances-tracker
+    SPRING_DOCKER_COMPOSE_ENABLED: "false"
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/finances
+    SPRING_DATASOURCE_DEFAULT_SCHEMA: public
+    SPRING_JOOQ_SQL_DIALECT: postgres
+    SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.yaml
+
+  probes:
+    liveness:
+      path: /actuator/health/liveness
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      failureThreshold: 3
+    readiness:
+      path: /actuator/health/readiness
+      initialDelaySeconds: 10
+      periodSeconds: 5
+      failureThreshold: 3
+    startup:
+      path: /actuator/health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 30
+
+## Frontend configuration
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: ghcr.io/jlmonteiro/personal-finances-tracker/frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+  ## Environment variables injected via ConfigMap
+  config: {}
+
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 3
+    readiness:
+      path: /health
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      failureThreshold: 3
+
+## Shared secret for credentials
+secrets:
+  databaseUsername: finances
+  databasePassword: finances
+
+## Ingress (single host, path-based routing)
+ingress:
+  enabled: true
+  className: traefik
+  host: finances.local
+  annotations: {}
+  tls: []

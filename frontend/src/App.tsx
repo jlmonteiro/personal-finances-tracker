@@ -3,8 +3,8 @@
  * Handles routing, navigation guard, and sidebar layout.
  */
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { AppShell, NavLink, LoadingOverlay } from '@mantine/core'
-import { IconDashboard, IconSettings, IconCategory, IconUsers, IconCalendar, IconBuildingBank } from '@tabler/icons-react'
+import { AppShell, NavLink, LoadingOverlay, Center, Stack, Text, Button } from '@mantine/core'
+import { IconDashboard, IconSettings, IconCategory, IconUsers, IconCalendar, IconBuildingBank, IconAlertCircle } from '@tabler/icons-react'
 import { useConfiguration } from './hooks/useConfiguration'
 import { Setup } from './pages/Setup'
 import { Dashboard } from './pages/Dashboard'
@@ -17,7 +17,7 @@ import { MonthTable } from './pages/MonthTable'
 import { MonthCalendar } from './pages/MonthCalendar'
 
 export const App = () => {
-  const { data: config, isLoading, isError } = useConfiguration()
+  const { data: config, isLoading, isError, refetch } = useConfiguration()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -25,8 +25,21 @@ export const App = () => {
     return <LoadingOverlay visible />
   }
 
-  // Redirect to setup if no configuration exists
-  if (config === null || isError) {
+  // Show error state after retries exhausted
+  if (isError) {
+    return (
+      <Center h="100vh">
+        <Stack align="center" gap="md">
+          <IconAlertCircle size={48} color="var(--mantine-color-red-6)" />
+          <Text size="lg" fw={500}>Unable to connect to the server</Text>
+          <Text size="sm" c="dimmed">Please check that the backend is running and try again.</Text>
+          <Button onClick={() => refetch()}>Retry</Button>
+        </Stack>
+      </Center>
+    )
+  }
+
+  if (config === null) {
     return (
       <Routes>
         <Route path="/setup" element={<Setup />} />
