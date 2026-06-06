@@ -27,6 +27,7 @@ backend:
   config:
     JAVA_OPTS: "-XX:MaxRAMPercentage=70.0"
     SERVER_PORT: "8080"
+    SERVER_SERVLET_CONTEXT_PATH: "/finances"
     SPRING_APPLICATION_NAME: personal-finances-tracker
     SPRING_DOCKER_COMPOSE_ENABLED: "false"
     SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/finances
@@ -36,17 +37,17 @@ backend:
 
   probes:
     liveness:
-      path: /actuator/health/liveness
+      path: /finances/actuator/health/liveness
       initialDelaySeconds: 30
       periodSeconds: 10
       failureThreshold: 3
     readiness:
-      path: /actuator/health/readiness
+      path: /finances/actuator/health/readiness
       initialDelaySeconds: 10
       periodSeconds: 5
       failureThreshold: 3
     startup:
-      path: /actuator/health
+      path: /finances/actuator/health
       initialDelaySeconds: 5
       periodSeconds: 5
       failureThreshold: 30
@@ -97,10 +98,7 @@ secrets:
   databaseUsername: finances
   databasePassword: finances
 
-## Ingress (single host, path-based routing)
+## Ingress (path-based routing under launcher domain)
 ingress:
   enabled: true
-  className: traefik
-  host: finances.local
-  annotations: {}
-  tls: []
+  host: home.monteiro.net

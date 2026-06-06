@@ -3,7 +3,7 @@
  * Prepends base URL and handles JSON serialization.
  */
 
-const BASE_URL = '/api/v1'
+const BASE_URL = `${import.meta.env.BASE_URL}api/v1`
 
 interface ApiError {
   type: string

@@ -18,7 +18,7 @@ step()  { echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━�
 PROJECT_DIR="$HOME/personal-finances-tracker"
 NAMESPACE="finances"
 RELEASE_NAME="finances"
-INGRESS_HOST="finances.monteiro.net"
+INGRESS_HOST="home.monteiro.net"
 BACKEND_IMAGE="ghcr.io/jlmonteiro/personal-finances-tracker/backend"
 FRONTEND_IMAGE="ghcr.io/jlmonteiro/personal-finances-tracker/frontend"
 VERSION=$(grep "^appVersion:" "$PROJECT_DIR/helm-deployment/Chart.yaml" | tr -d '"' | awk '{print $2}')

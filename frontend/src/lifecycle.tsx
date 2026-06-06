@@ -1,5 +1,5 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, Root } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { MantineProvider, createTheme } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
@@ -8,32 +8,35 @@ import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
 import { App } from './App'
 
-export { bootstrap, mount, unmount } from './lifecycle'
-
 const theme = createTheme({
   primaryColor: 'blue',
   defaultRadius: 'md',
 })
 
-const queryClient = new QueryClient()
+let root: Root | null = null
+let queryClient: QueryClient | null = null
 
-// Standalone mode (npm run dev)
-const rootEl = document.getElementById('root')
-if (rootEl) {
-  /**
-   * Application entry point.
-   * Sets up providers: Mantine, React Router, TanStack Query, and Notifications.
-   */
-  createRoot(rootEl).render(
+export const bootstrap = async () => {}
+
+export const mount = async (container: HTMLElement) => {
+  queryClient = new QueryClient()
+  root = createRoot(container)
+  root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <MantineProvider theme={theme} defaultColorScheme="light">
           <Notifications />
-          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-            <App />
+          <BrowserRouter basename="/finances">
+            <App embedded />
           </BrowserRouter>
         </MantineProvider>
       </QueryClientProvider>
     </StrictMode>,
   )
+}
+
+export const unmount = async () => {
+  root?.unmount()
+  root = null
+  queryClient = null
 }
