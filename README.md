@@ -2,7 +2,7 @@
 
 [![Backend CI](https://github.com/jlmonteiro/personal-finances-tracker/actions/workflows/backend.yml/badge.svg)](https://github.com/jlmonteiro/personal-finances-tracker/actions/workflows/backend.yml)
 [![Frontend CI](https://github.com/jlmonteiro/personal-finances-tracker/actions/workflows/frontend.yml/badge.svg)](https://github.com/jlmonteiro/personal-finances-tracker/actions/workflows/frontend.yml)
-![Version](https://img.shields.io/badge/version-0.0.1-blue)
+![Version](https://img.shields.io/github/v/release/jlmonteiro/personal-finances-tracker?label=version&color=blue)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.1-purple?logo=kotlin)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0-green?logo=springboot)
 ![React](https://img.shields.io/badge/React-19-blue?logo=react)
