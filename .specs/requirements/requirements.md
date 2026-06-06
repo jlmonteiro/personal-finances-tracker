@@ -82,6 +82,8 @@ Requirements use the **EARS (Easy Approach to Requirements Syntax)** pattern:
 | [**FR-13**](monthly-planning.md#fr-13) | Expense Category Selection | Each expense must have exactly one category selected from the payee's associated categories. |
 | [**FR-18**](monthly-planning.md#fr-18) | Expense Status | Derived status (pending, paid, overdue) based on dates and values. |
 | [**FR-22**](monthly-planning.md#fr-22) | Export Month to Markdown | Export full month breakdown as Markdown for LLM analysis. |
+| [**FR-23**](budgets-bank-accounts.md#fr-23) | Category Budgets | Set informational budget per category per quarter with auto-creation. |
+| [**FR-25**](budgets-bank-accounts.md#fr-25) | Expense Fund Source | Every expense must have a bank account assigned as funding source. |
 
 ---
 
@@ -95,6 +97,14 @@ Requirements use the **EARS (Easy Approach to Requirements Syntax)** pattern:
 | [**FR-19**](dashboard.md#fr-19) | Calendar View | Month calendar with quarter highlighting, income/expenses, and status icons. |
 | [**FR-20**](dashboard.md#fr-20) | Table View | Per-quarter table with full expense details. |
 | [**FR-21**](dashboard.md#fr-21) | Recurring Expense Monthly Override | Modify recurring expense values for a specific month only. |
+
+---
+
+## 6. Bank Accounts
+
+| ID | Requirement | Description |
+| :--- | :--- | :--- |
+| [**FR-24**](budgets-bank-accounts.md#fr-24) | Bank Account Management | CRUD for bank accounts with name, description, and logo upload. |
 
 ---
 
@@ -134,3 +144,4 @@ Requirements use the **EARS (Easy Approach to Requirements Syntax)** pattern:
 | **Income Source** | A recurring source of income (e.g., salary, freelance, rental) with a defined amount, frequency, and payment schedule. |
 | **Fixed Date** | A specific day of the month for a payment (e.g., the 25th). |
 | **Relative Date** | A rule-based payment date (e.g., "last Thursday of the month", "every Monday"). |
+| **Bank Account** | A user's bank account used as a funding source for expenses. Tracks reservations, not balances (for now). |

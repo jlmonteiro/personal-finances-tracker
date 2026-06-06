@@ -12,6 +12,7 @@ export const useConfiguration = () => {
   return useQuery({
     queryKey: ['configuration'],
     queryFn: getConfiguration,
-    retry: false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 5000),
   })
 }

@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-06-06
+
+### Added
+
+- Helm chart for Kubernetes deployment (backend + frontend)
+- Dockerfiles for backend (JDK 21 multi-stage) and frontend (nginx multi-stage)
+- GitHub Actions workflow to publish Docker images and Helm chart to ghcr.io
+- Local deploy script (`scripts/deploy-local.sh`) for k3s
+- Spring Boot Actuator with health/readiness/liveness probes
+- Configurable database schema via `SPRING_DATASOURCE_DEFAULT_SCHEMA` env var
+- Single ingress with path-based routing (`/api` → backend, `/` → frontend)
+
+### Changed
+
+- Bumped version to 1.0.0 (first production release)
+- Frontend error handling: retry with backoff + error state instead of infinite loading
+- Version consistency script now checks Chart.yaml
+- Pre-commit `check-yaml` excludes Helm templates
+
+## [0.4.0] - 2026-06-02
+
+### Added
+
+- Categories API (CRUD with icon, duplicate name detection, 17 Cucumber tests)
+- Payees API (CRUD with category associations, validation, 16 Cucumber tests)
+- Categories frontend page (table with rendered Tabler icons, modal forms, delete confirmation)
+- Payees frontend page (MultiSelect for category associations, modal forms)
+- Sidebar navigation entries for Categories and Payees
+- Liquibase migration for categories, payees, payee_categories tables
+
 ## [0.3.0] - 2026-06-02
 
 ### Added

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: personal-finances-tracker
+description: Helm chart for Personal Finances Tracker (backend + frontend)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

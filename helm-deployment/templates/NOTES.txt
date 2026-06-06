@@ -1,0 +1,20 @@
+🚀 {{ .Chart.Name }} v{{ .Chart.AppVersion }} deployed successfully!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Resources:
+  • Backend:  {{ include "finances.backend.fullname" . }}:{{ .Values.backend.service.port }}
+  • Frontend: {{ include "finances.frontend.fullname" . }}:{{ .Values.frontend.service.port }}
+  • Namespace: {{ .Release.Namespace }}
+
+{{- if .Values.ingress.enabled }}
+🌐 Ingress:
+  • http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}/     → frontend
+  • http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.host }}/api  → backend
+{{- end }}
+
+✅ Validation:
+  kubectl get pods -l app.kubernetes.io/instance={{ .Release.Name }} -n {{ .Release.Namespace }}
+  kubectl logs -l app.kubernetes.io/component=backend -n {{ .Release.Namespace }} --tail=50
+  kubectl logs -l app.kubernetes.io/component=frontend -n {{ .Release.Namespace }} --tail=50
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

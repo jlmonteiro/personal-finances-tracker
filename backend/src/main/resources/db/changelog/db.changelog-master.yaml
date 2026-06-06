@@ -3,3 +3,15 @@ databaseChangeLog:
       file: db/changelog/001-initial-schema.yaml
   - include:
       file: db/changelog/002-income-sources.yaml
+  - include:
+      file: db/changelog/003-categories-payees.yaml
+  - include:
+      file: db/changelog/004-financial-months.yaml
+  - include:
+      file: db/changelog/005-expenses.yaml
+  - include:
+      file: db/changelog/006-recurring-expenses.yaml
+  - include:
+      file: db/changelog/007-budgets-bank-accounts.yaml
+  - include:
+      file: db/changelog/008-income-entries.yaml

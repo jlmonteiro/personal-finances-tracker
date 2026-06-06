@@ -1,0 +1,105 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-financial-months
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: financial_months
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  defaultValueComputed: now()
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: financial_months
+            columnNames: start_date
+            constraintName: uq_financial_months_start_date
+        - sql:
+            sql: >
+              ALTER TABLE financial_months
+              ADD CONSTRAINT chk_financial_months_dates
+              CHECK (end_date > start_date)
+
+  - changeSet:
+      id: 004-create-quarters
+      author: jlmonteiro
+      changes:
+        - createTable:
+            tableName: quarters
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: financial_month_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quarter_number
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_date
+                  type: date
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: quarters
+            baseColumnNames: financial_month_id
+            referencedTableName: financial_months
+            referencedColumnNames: id
+            constraintName: fk_quarters_financial_month
+        - addUniqueConstraint:
+            tableName: quarters
+            columnNames: financial_month_id, quarter_number
+            constraintName: uq_quarters_month_number
+        - sql:
+            sql: >
+              ALTER TABLE quarters
+              ADD CONSTRAINT chk_quarters_number
+              CHECK (quarter_number BETWEEN 1 AND 4)
+        - sql:
+            sql: >
+              ALTER TABLE quarters
+              ADD CONSTRAINT chk_quarters_dates
+              CHECK (end_date > start_date)
+        - createIndex:
+            indexName: idx_quarters_month_id
+            tableName: quarters
+            columns:
+              - column:
+                  name: financial_month_id
